@@ -317,6 +317,8 @@
             </geometry>
         </collision>
     </link>
+    <link name="tool0_link" />
+    <link name="tcp_link" />
     <joint name="base_joint" type="fixed">
         <parent link="world" />
         <child link="base_link" />
@@ -363,6 +365,16 @@
         <child link="wrist_3_link" />
         <axis xyz="-0.0 -1.0 0.0" />
         <limit effort="50.0" lower="-3.04" upper="3.04" velocity="3.141592653589793" />
+    </joint>
+    <joint name="tool0_joint" type="fixed">
+        <parent link="wrist_3_link" />
+        <child link="tool0_link" />
+        <origin rpy="1.5707963267948966 0 0" xyz="0.0 -0.0335 0.0" />
+    </joint>
+    <joint name="tcp_joint" type="fixed">
+        <parent link="tool0_link" />
+        <child link="tcp_link" />
+        <origin rpy="-3.141592653589793 0 1.5707963267948966" xyz="0.0 0.0 0" />
     </joint>
     <link name="world" />
     <gazebo>

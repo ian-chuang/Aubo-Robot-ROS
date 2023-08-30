@@ -10,6 +10,7 @@
     prefix 
     parent
     hw_interface
+    tcp_offset
     *origin"
   >
 
@@ -176,6 +177,10 @@
       </collision>
     </link>
 
+    <link name="${prefix}tool0_link"/>
+
+    <link name="${prefix}tcp_link"/>
+
     <joint name="${prefix}base_joint" type="fixed">
       <parent link="${parent}" />
       <child link="${prefix}base_link" />
@@ -236,6 +241,17 @@
         effort="${max_effort_2}" />
     </joint>
 
+    <joint name="${prefix}tool0_joint" type="fixed">
+      <parent link="${prefix}wrist_3_link" />
+      <child link="${prefix}tool0_link" />
+      <origin xyz="0.0 -0.0335 0.0" rpy="${pi/2} 0 0" />
+    </joint>
+
+    <joint name="${prefix}tcp_joint" type="fixed">
+      <parent link="${prefix}tool0_link" />
+      <child link="${prefix}tcp_link" />
+      <origin xyz="0.0 0.0 ${tcp_offset}" rpy="${-pi} 0 ${pi/2}" />
+    </joint>
 
   </xacro:macro>
 

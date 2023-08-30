@@ -6,8 +6,9 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /RobotModel1
         - /RobotModel1/Links1
+        - /TF1
+        - /TF1/Frames1
       Splitter Ratio: 0.5029411911964417
     Tree Height: 585
   - Class: rviz/Selection
@@ -68,32 +69,36 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        forearm_link_1:
+        forearm_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        shoulder_link_1:
+        shoulder_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        upper_arm_link_1:
+        upper_arm_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        wrist_1_link_1:
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_1_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        wrist_2_link_1:
+        wrist_2_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        wrist_3_link_1:
+        wrist_3_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -104,6 +109,45 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        base_link:
+          Value: false
+        forearm_link:
+          Value: false
+        shoulder_link:
+          Value: false
+        upper_arm_link:
+          Value: false
+        world:
+          Value: false
+        wrist_1_link:
+          Value: false
+        wrist_2_link:
+          Value: false
+        wrist_3_link:
+          Value: true
+      Marker Alpha: 1
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        world:
+          base_link:
+            shoulder_link:
+              upper_arm_link:
+                forearm_link:
+                  wrist_1_link:
+                    wrist_2_link:
+                      wrist_3_link:
+                        {}
+      Update Interval: 0
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -132,7 +176,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.4100829362869263
+      Distance: 1.327177882194519
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -140,17 +184,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.014723268337547779
-        Y: -0.024802137166261673
-        Z: 0.15228527784347534
+        X: -0.13074509799480438
+        Y: 0.2742230296134949
+        Z: 0.5437740087509155
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4447965621948242
+      Pitch: 0.6847966313362122
       Target Frame: <Fixed Frame>
-      Yaw: 5.6717681884765625
+      Yaw: 5.001767635345459
     Saved: ~
 Window Geometry:
   Displays:
@@ -168,5 +212,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1216
-  X: 2773
-  Y: 407
+  X: 2741
+  Y: 375
