@@ -1,7 +1,7 @@
 <launch>
     <arg name="gui" default="true" />
     <arg name="rvizconfig" default="$(find aubo_i5_description)/config/urdf.rviz" />
-    <arg name="urdf_path" default="$(find aubo_i5_description)/urdf/aubo_aligned_urdf.xacro" />
+    <arg name="urdf_path" default="$(find aubo_i5_description)/urdf/aubo_i5.xacro" />
   
     <!-- send robot urdf to param server -->
     <param name="robot_description" command="xacro '$(arg urdf_path)'" />

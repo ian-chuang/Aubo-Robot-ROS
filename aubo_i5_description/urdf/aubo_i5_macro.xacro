@@ -1,0 +1,242 @@
+<?xml version="1.0"?>
+<robot name="aubo_i5_macro" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+
+  <xacro:include filename="$(find aubo_i5_description)/urdf/aubo_i5_transmission.xacro" />
+  <xacro:include filename="$(find aubo_i5_description)/urdf/aubo_i5_gazebo.xacro" />
+
+  <xacro:macro name="aubo_i5"
+    params="
+    prefix 
+    parent
+    hw_interface
+    *origin"
+  >
+
+    <xacro:aubo_i5_transmission prefix="${prefix}" hw_interface="${hw_interface}" />
+    <xacro:aubo_i5_gazebo prefix="${prefix}" />
+
+    <xacro:property name="lower_limit" value="-3.04" />
+    <xacro:property name="upper_limit" value="3.04" />
+    <xacro:property name="max_velocity" value="${pi}" />
+    <xacro:property name="max_effort_1" value="300.0" />
+    <xacro:property name="max_effort_2" value="50.0" />
+
+    <link name="${prefix}base_link">
+      <inertial>
+        <origin xyz="5.280333978763784e-09 0.0015966894220128586 0.016570455971104445" rpy="0 0 0" />
+        <mass value="1.4382166298722134" />
+        <inertia ixx="0.003103" iyy="0.002858" izz="0.005531" ixy="-0.0" iyz="-4.9e-05" ixz="-0.0" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="${-pi/2} 0 0" />
+        <geometry>
+          <mesh filename="package://aubo_i5_description/meshes/visual/base_link.dae"
+            scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://aubo_i5_description/meshes/collision/base_link.stl"
+            scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${prefix}shoulder_link">
+      <inertial>
+        <origin xyz="-4.185040550529615e-07 -0.00538388048820414 0.06988520317439471" rpy="0 0 0" />
+        <mass value="3.9977368906576385" />
+        <inertia ixx="0.010612" iyy="0.010271" izz="0.007824" ixy="-0.0" iyz="0.000382" ixz="0.0" />
+      </inertial>
+      <visual>
+        <origin xyz="0.0 -0.0 -0.0435" rpy="${-pi/2} 0 0" />
+        <geometry>
+          <mesh filename="package://aubo_i5_description/meshes/visual/shoulder_link.dae"
+            scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.0 -0.0 -0.0435" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://aubo_i5_description/meshes/collision/shoulder_link.stl"
+            scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${prefix}upper_arm_link">
+      <inertial>
+        <origin xyz="4.5155821807648865e-10 -0.0717893986201179 0.20400016275508465" rpy="0 0 0" />
+        <mass value="10.264360778757078" />
+        <inertia ixx="0.367413" iyy="0.361705" izz="0.024156" ixy="-0.0" iyz="-0.0" ixz="1e-06" />
+      </inertial>
+      <visual>
+        <origin xyz="0.0 0.062 -0.122" rpy="${-pi/2} 0 0" />
+        <geometry>
+          <mesh filename="package://aubo_i5_description/meshes/visual/upper_arm_link.dae"
+            scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.0 0.062 -0.122" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://aubo_i5_description/meshes/collision/upper_arm_link.stl"
+            scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${prefix}forearm_link">
+      <inertial>
+        <origin xyz="-8.598904331136158e-08 0.03777959596600701 0.18625691250689058" rpy="0 0 0" />
+        <mass value="5.717058820664718" />
+        <inertia ixx="0.110129" iyy="0.109705" izz="0.005171" ixy="-0.0" iyz="-0.000971" ixz="0.0" />
+      </inertial>
+      <visual>
+        <origin xyz="0.0 0.062 -0.53" rpy="${-pi/2} 0 0" />
+        <geometry>
+          <mesh filename="package://aubo_i5_description/meshes/visual/forearm_link.dae"
+            scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.0 0.062 -0.53" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://aubo_i5_description/meshes/collision/forearm_link.stl"
+            scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${prefix}wrist_1_link">
+      <inertial>
+        <origin xyz="4.043690373112674e-07 -0.03781762705264109 0.010378004019249931" rpy="0 0 0" />
+        <mass value="1.1959791801557391" />
+        <inertia ixx="0.001481" iyy="0.001416" izz="0.000986" ixy="0.0" iyz="7.9e-05" ixz="0.0" />
+      </inertial>
+      <visual>
+        <origin xyz="0.0 0.0795 -0.906" rpy="${-pi/2} 0 0" />
+        <geometry>
+          <mesh filename="package://aubo_i5_description/meshes/visual/wrist_1_link.dae"
+            scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.0 0.0795 -0.906" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://aubo_i5_description/meshes/collision/wrist_1_link.stl"
+            scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${prefix}wrist_2_link">
+      <inertial>
+        <origin xyz="-3.835911159071275e-07 -0.010378293494720053 0.03781729945949308" rpy="0 0 0" />
+        <mass value="1.195979134054204" />
+        <inertia ixx="0.001481" iyy="0.000986" izz="0.001416" ixy="0.0" iyz="7.9e-05" ixz="0.0" />
+      </inertial>
+      <visual>
+        <origin xyz="0.0 0.1215 -0.96656" rpy="${-pi/2} 0 0" />
+        <geometry>
+          <mesh filename="package://aubo_i5_description/meshes/visual/wrist_2_link.dae"
+            scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.0 0.1215 -0.96656" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://aubo_i5_description/meshes/collision/wrist_2_link.stl"
+            scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${prefix}wrist_3_link">
+      <inertial>
+        <origin xyz="4.15409377624965e-09 -0.01855349466746148 0.0003522591384534923" rpy="0 0 0" />
+        <mass value="0.19247764025253766" />
+        <inertia ixx="0.000104" iyy="0.000169" izz="0.000101" ixy="0.0" iyz="-1e-06" ixz="-0.0" />
+      </inertial>
+      <visual>
+        <origin xyz="0.0 0.18206 -1.00856" rpy="${-pi/2} 0 0" />
+        <geometry>
+          <mesh filename="package://aubo_i5_description/meshes/visual/wrist_3_link.dae"
+            scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.0 0.18206 -1.00856" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://aubo_i5_description/meshes/collision/wrist_3_link.stl"
+            scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${prefix}base_joint" type="fixed">
+      <parent link="${parent}" />
+      <child link="${prefix}base_link" />
+      <xacro:insert_block name="origin" />
+    </joint>
+
+    <joint name="${prefix}shoulder_pan_joint" type="revolute">
+      <origin xyz="0.0 0.0 0.0435" rpy="0 0 0" />
+      <parent link="${prefix}base_link" />
+      <child link="${prefix}shoulder_link" />
+      <axis xyz="-0.0 0.0 1.0" />
+      <limit lower="${lower_limit}" upper="${upper_limit}" velocity="${max_velocity}"
+        effort="${max_effort_1}" />
+    </joint>
+
+    <joint name="${prefix}shoulder_lift_joint" type="revolute">
+      <origin xyz="0.0 -0.062 0.0785" rpy="0 0 0" />
+      <parent link="${prefix}shoulder_link" />
+      <child link="${prefix}upper_arm_link" />
+      <axis xyz="-0.0 -1.0 0.0" />
+      <limit lower="${lower_limit}" upper="${upper_limit}" velocity="${max_velocity}"
+        effort="${max_effort_1}" />
+    </joint>
+
+    <joint name="${prefix}elbow_joint" type="revolute">
+      <origin xyz="0.0 0.0 0.408" rpy="0 0 0" />
+      <parent link="${prefix}upper_arm_link" />
+      <child link="${prefix}forearm_link" />
+      <axis xyz="-0.0 1.0 -0.0" />
+      <limit lower="${lower_limit}" upper="${upper_limit}" velocity="${max_velocity}"
+        effort="${max_effort_1}" />
+    </joint>
+
+    <joint name="${prefix}wrist_1_joint" type="revolute">
+      <origin xyz="0.0 -0.0175 0.376" rpy="0 0 0" />
+      <parent link="${prefix}forearm_link" />
+      <child link="${prefix}wrist_1_link" />
+      <axis xyz="-0.0 -1.0 0.0" />
+      <limit lower="${lower_limit}" upper="${upper_limit}" velocity="${max_velocity}"
+        effort="${max_effort_2}" />
+    </joint>
+
+    <joint name="${prefix}wrist_2_joint" type="revolute">
+      <origin xyz="0.0 -0.042 0.06056" rpy="0 0 0" />
+      <parent link="${prefix}wrist_1_link" />
+      <child link="${prefix}wrist_2_link" />
+      <axis xyz="-0.0 0.0 1.0" />
+      <limit lower="${lower_limit}" upper="${upper_limit}" velocity="${max_velocity}"
+        effort="${max_effort_2}" />
+    </joint>
+
+    <joint name="${prefix}wrist_3_joint" type="revolute">
+      <origin xyz="0.0 -0.06056 0.042" rpy="0 0 0" />
+      <parent link="${prefix}wrist_2_link" />
+      <child link="${prefix}wrist_3_link" />
+      <axis xyz="-0.0 -1.0 0.0" />
+      <limit lower="${lower_limit}" upper="${upper_limit}" velocity="${max_velocity}"
+        effort="${max_effort_2}" />
+    </joint>
+
+
+  </xacro:macro>
+
+</robot>
