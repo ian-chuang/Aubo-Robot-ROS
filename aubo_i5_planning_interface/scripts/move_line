@@ -11,23 +11,10 @@ if __name__ == "__main__":
     # Create a planning interface object
     planning_interface = PlanningInterface()
 
-    planning_interface.move_home(1, 1)
-
-    # Create a pose object
-    pose = Pose()
-    pose.position.x = 0.5
-    pose.position.y = 0.0
-    pose.position.z = 0.5
-    pose.orientation.x = 0
-    pose.orientation.y = 0
-    pose.orientation.z = 0
-    pose.orientation.w = 1
-
-
-    # planning_interface.move_line(pose, 1, 1)
+    planning_interface.move_home(0.1, 0.1)
 
     planning_interface.move_offset(
-        np.array([-0.1, 0.0, -0.1, 1, 0, 0]),
-        1, 
-        1
+        np.array([0, 0.0, 0, 0.5, 0, 0]),
+        0.1, 
+        0.1
     )
