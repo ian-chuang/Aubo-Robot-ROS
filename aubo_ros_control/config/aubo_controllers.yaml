@@ -1,0 +1,74 @@
+# Settings for ros_control hardware interface
+aubo_hardware_interface:
+   servoj_frequency: &loop_hz 125
+   servoj_smooth_scale: 1
+   servoj_delay_scale: 1
+   servoj_buffer_time: 0.05
+   read_frequency: 1
+   joints: &robot_joints
+      - shoulder_pan_joint
+      - shoulder_lift_joint
+      - elbow_joint
+      - wrist_1_joint
+      - wrist_2_joint
+      - wrist_3_joint
+   joint_limits:
+      joint:
+         has_position_limits: true
+         min_position: -3.04
+         max_position: 3.04
+         has_velocity_limits: true
+         max_velocity: 0.15 # 0.05
+         has_acceleration_limits: true
+         max_acceleration: 0.15 #0.05
+
+# Publish all joint states ----------------------------------
+joint_state_controller:
+   type: joint_state_controller/JointStateController
+   publish_rate: *loop_hz
+
+joint_group_pos_controller:
+   type: position_controllers/JointGroupPositionController
+   joints: *robot_joints
+
+pos_joint_traj_controller:
+   type: position_controllers/JointTrajectoryController
+   joints: *robot_joints
+   constraints:
+      goal_time: 0.6
+      stopped_velocity_tolerance: 0.05
+      shoulder_pan_joint: { trajectory: 0.2, goal: 0.1 }
+      shoulder_lift_joint: { trajectory: 0.2, goal: 0.1 }
+      elbow_joint: { trajectory: 0.2, goal: 0.1 }
+      wrist_1_joint: { trajectory: 0.2, goal: 0.1 }
+      wrist_2_joint: { trajectory: 0.2, goal: 0.1 }
+      wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
+   stop_trajectory_duration: 0.5
+   state_publish_rate: *loop_hz
+   action_monitor_rate: 20
+
+motion_control_handle:
+   type: "cartesian_controllers/MotionControlHandle"
+   end_effector_link: "wrist_3_link"
+   robot_base_link: "world"
+   target_frame_topic: "/cartesian_motion_controller/target_frame"
+   joints: *robot_joints
+
+cartesian_motion_controller:
+   type: "position_controllers/CartesianMotionController"
+   end_effector_link: "wrist_3_link"
+   robot_base_link: "world"
+   target_frame_topic: "target_frame"
+   joints: *robot_joints
+
+   solver:
+    error_scale: 1
+    iterations: 10
+
+   pd_gains:
+      trans_x: { p: 10.0 }
+      trans_y: { p: 10.0 }
+      trans_z: { p: 10.0 }
+      rot_x: { p: 0.3 }
+      rot_y: { p: 0.3 }
+      rot_z: { p: 0.3 }
