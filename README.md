@@ -19,18 +19,23 @@ This repository contains experimental drivers for running Aubo i5 with ROS using
 
 ## Installation
 1. Clone this repository into your ROS Noetic workspace:
-    ```bash
-    cd ~/your_ws/src
-    git clone https://github.com/ian-chuang/Aubo-Robot-ROS.git
-    ```
+   
+   ```bash
+   cd ~/your_ws/src
+   git clone https://github.com/ian-chuang/Aubo-Robot-ROS.git
+   ```
 
-2. If you want to use Cartesian control or joint trajectory controller, clone these as well:
+2. Add the lib files to the following directories:
+   - `aubo_ros_control/dependent/robotsdk/lib/linux_x64`
+   - `aubo_ros_control/dependent/servojsdk/lib/linux_x64`
+
+3. If you want to use Cartesian control or joint trajectory controller, clone these as well:
     ```bash
     git clone -b aubo https://github.com/ian-chuang/cartesian_controllers.git 
     git clone -b aubo https://github.com/ian-chuang/ros_controllers 
     ```
 
-3. Install required dependencies for building:
+4. Install required dependencies for building:
     ```bash
     sudo apt install ros-noetic-catkin python3-catkin-tools
     cd ~/your_ws/src
