@@ -21,12 +21,12 @@ catkin_package(
  DEPENDS
 )
 
-include_directories(include dependent/inc  ${catkin_INCLUDE_DIRS})
+include_directories(include dependent/robotsdk/inc dependent/servojsdk/inc  ${catkin_INCLUDE_DIRS})
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        link_directories(${catkin_LIB_DIRS}  dependent/lib/x64)
+        link_directories(${catkin_LIB_DIRS}  dependent/robotsdk/lib/linux_x64 dependent/servojsdk/lib/linux_x64)
 else()
-        link_directories(${catkin_LIB_DIRS}  dependent/lib/x32)
+        link_directories(${catkin_LIB_DIRS}  dependent/robotsdk/lib/linux_x32 dependent/servojsdk/lib/linux_x32)
 endif()
 
 add_executable(test_aubo_driver

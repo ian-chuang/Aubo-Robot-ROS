@@ -347,6 +347,13 @@ public:
 
     void  robotServiceGetJerkAccRatio(double  &acc);
 
+    int   robotServiceSetAngleJerkAccRatio(double acc);
+
+    void  robotServiceGetAngleJerkAccRatio(double  &acc);
+
+    int robotServiceSetCommonJerkRatio(double ratio);
+    int robotServiceResetCommonJerkRatio();
+
     /** 运动属性中的路点设置与获取　多用于轨迹运动**/
     void  robotServiceClearGlobalWayPointVector();
 
@@ -557,7 +564,7 @@ public:
      * @return　调用成功返回ErrnoSucc;错误返回错误号
      */
     int robotServiceTeachStart(aubo_robot_namespace::teach_mode mode, bool direction);
-
+    int robotServiceSpeedMove(int mode,const aubo_robot_namespace::CoordCalibrateByJointAngleAndTool &userCoord, const double direction[]);
 
     /**
       * @brief 获取机械臂运动轨迹（目前支持轴动及笛卡尔直线运动）
@@ -632,12 +639,37 @@ public:
 
     int servoj(const double q[6], double duration, double smooth_scale, double delay_sacle, bool is_last_point = false);
 
-    int startMoveGroup();
+    int startMoveGroup(aubo_robot_namespace::MoveModeType type = aubo_robot_namespace::MoveModeType::MOVE_GROUP,
+                       bool conveyer = false,
+                       int conveyer_index = 0);
+
+    int addIdActionToMoveGroup(const aubo_robot_namespace::IdAction &action);
 
     int setEndOfMoveGroup();
 
     int waitMoveGroupFinished();
 
+    int fcSensorOn();
+    int fcSensorOff();
+    int fcGetSensorData(std::vector<double> &data);
+    int fcGetTCPwrenchData(std::vector<double> &data);
+    int fcSensorCalibration(const std::vector<std::array<double, aubo_robot_namespace::ARM_DOF> > &joints,
+                            const std::vector<aubo_robot_namespace::ForceSensorData> &force_datas,
+                            aubo_robot_namespace::FtSensorCalibResult &result);
+
+    int ctSetEncoderParam(const aubo_robot_namespace::EncoderParam &param, int index = 0);
+    int ctInitConveyer(int index = 0);
+    int ctEnableSimConveyer(bool sim, int index = 0);
+    int ctStartConveyer(double vel, int index = 0);
+    int ctStopConveyer(int index = 0);
+    int ctResetEncoder(int index = 0);
+    int ctGetEncoderData(aubo_robot_namespace::ExternEncoderStatus &encoder_data, int index = 0);
+    int ctSetConveyerParam(const aubo_robot_namespace::ConveyerParam &param, int index = 0);
+    int ctSetTrackingParam(const aubo_robot_namespace::TrackingParam &param, int index = 0);
+    int ctSetCameraParam(const aubo_robot_namespace::CameraParam &param, int index = 0);
+    int ctAppendWorkpiece(double x = 0, double y = 0, double rz = 0, int index = 0);
+    int ctGetAllWorkpiece(std::vector<std::vector<double> > &workpieces, int index = 0);
+    int ctGetTrackingResult(aubo_robot_namespace::ConveyerTrackingResult &result, int index = 0);
 
     /*******************************************************************工具接口*************************************************************
      * 工具接口：正解接口,
@@ -705,6 +737,7 @@ public:
     int robotServiceUserCoordinateCalibration(const aubo_robot_namespace::CoordCalibrateByJointAngleAndTool  &coordSystem, double bInWPos[3], double bInWOri[9], double wInBPos[3]);
 
     int robotServiceOriMatrixToQuaternion(double eerot[], aubo_robot_namespace::Ori &result);
+
 
 
     /**
@@ -836,6 +869,28 @@ public:
 
 
     /**
+     * @brief 坐标变换(F_c_a = F_c_b * F_b_a)
+     * @param F_b_a: a 相对于 b 的位姿
+     * @param F_c_b: b 相对于 c 的位姿
+     * @return a 相对于 c 的位姿
+     */
+    int poseTrans(const aubo_robot_namespace::PositionAndQuaternion &F_b_a,
+                  const aubo_robot_namespace::PositionAndQuaternion &F_c_b,
+                  aubo_robot_namespace::PositionAndQuaternion &F_c_a);
+
+    /**
+     * @brief 齐次变换矩阵的逆
+     * @param F_b_a: a 相对于 b 的位姿
+     * @return b 相对于 a 的位姿
+     */
+    int poseInv(const aubo_robot_namespace::PositionAndQuaternion &F_b_a,
+                aubo_robot_namespace::PositionAndQuaternion &F_a_b);
+
+
+    int userCoord2Pose(const aubo_robot_namespace::CoordCalibrateByJointAngleAndTool &userCoord,
+                       aubo_robot_namespace::PositionAndQuaternion &F_b_u);
+
+    /**
      * @brief getErrDescByCode  根据错误号获取错误信息
      * @param code　　错误号
      * @return　调用成功返回ErrnoSucc;错误返回错误号
@@ -961,6 +1016,7 @@ public:
 
     //业务接口:获取设备信息
     int robotServiceGetRobotDevInfoService(aubo_robot_namespace::RobotDevInfo &devInfo);
+    int robotServiceGetInterfaceBoardVersionMajor(int &version_major);
 
     //设置最大加速度
     int robotServiceSetRobotMaxACC(int maxAcc);
@@ -983,8 +1039,7 @@ public:
     int robotServiceGetIsRealRobotExist(bool &value);
 
     /**
-     * @brief robotServiceGetJoint6
-     * 360EnableFlag   获取６关节旋转360使能标志
+     * @brief robotServiceGetJoint6Rotate360EnableFlag   获取６关节旋转360使能标志
      * @param value
      * @return
      */
@@ -1046,6 +1101,7 @@ public:
      */
     int robotServiceGetJointRangeOfMotion(aubo_robot_namespace::JointRangeOfMotion &rangeOfMotion);
     int robotServiceGetJointPositionLimit(aubo_robot_namespace::JointRangeOfMotion &rangeOfMotion);
+    int robotServiceGetJointPositionLimitBoard(aubo_robot_namespace::JointRangeOfMotion &rangeOfMotion);
 
 
     /*****************************************************************************************************************************************************/
@@ -1162,6 +1218,25 @@ public:
      */
     int robotServiceSetBoardIOStatus(aubo_robot_namespace::RobotIoType type, int    addr,      double value);
 
+    /**
+     * @brief 根据接口板IO类型和名称设置脉冲
+     * @param type    IO类型
+     * @param addr    IO地址
+     * @param value   IO状态
+     * @param duration 脉冲时长(ms)
+     * @return　调用成功返回ErrnoSucc;错误返回错误号
+     */
+    int robotServiceSetBoardIOPulse(aubo_robot_namespace::RobotIoType type, std::string name, double value, int millisecond);
+
+    /**
+     * @brief 根据接口板IO类型和地址设置脉冲
+     * @param type    IO类型
+     * @param addr    IO地址
+     * @param value   IO状态
+     * @param duration 脉冲时长(ms)
+     * @return　调用成功返回ErrnoSucc;错误返回错误号
+     */
+    int robotServiceSetBoardIOPulse(aubo_robot_namespace::RobotIoType type, int addr, double value, int millisecond);
 
     /**
      * @brief 根据接口板IO类型和名称获取IO状态
@@ -1197,6 +1272,16 @@ public:
      */
     int robotServiceIsOnlineMasterMode(bool &isOnlineMasterMode);
 
+
+    int robotServiceSetDIAction(aubo_robot_namespace::ROBOT_DI_ACTION action, int addr);
+    int robotServiceGetDIAction(aubo_robot_namespace::ROBOT_DI_ACTION action, int &addr);
+    int robotServiceSetDIAction(aubo_robot_namespace::ROBOT_DI_ACTION action, std::string name);
+    int robotServiceGetDIAction(aubo_robot_namespace::ROBOT_DI_ACTION action, std::string &name);
+
+    int robotServiceSetDOAction(aubo_robot_namespace::ROBOT_DO_ACTION action, int addr);
+    int robotServiceGetDOAction(aubo_robot_namespace::ROBOT_DO_ACTION action, int &addr);
+    int robotServiceSetDOAction(aubo_robot_namespace::ROBOT_DO_ACTION action, std::string name);
+    int robotServiceGetDOAction(aubo_robot_namespace::ROBOT_DO_ACTION action, std::string &name);
 
 
 public:
@@ -1289,6 +1374,24 @@ public:
      * @return　调用成功返回ErrnoSucc;错误返回错误号
      */
     int robotServiceSetToolDOStatus(std::string name,        aubo_robot_namespace::IO_STATUS value);
+
+    /**
+     * @brief 根据地址设置工具端数字量IO的脉冲
+     * @param addr    IO地址
+     * @param value   IO状态
+     * @param duration   脉冲时长(ms)
+     * @return　调用成功返回ErrnoSucc;错误返回错误号
+     */
+    int robotServiceSetToolDOPulse(int addr, double value, int millisecond);
+
+    /**
+     * @brief 根据名称设置工具端数字量IO的脉冲
+     * @param addr    IO地址
+     * @param value   IO状态
+     * @param duration   脉冲时长(ms)
+     * @return　调用成功返回ErrnoSucc;错误返回错误号
+     */
+    int robotServiceSetToolDOPulse(std::string name, double value, int millisecond);
 
     /**
      * @brief 根据名称获取工具端IO的状态
@@ -1471,6 +1574,8 @@ public:  //脚本管理
 
     int robotServiceScriptRun(const char *scriptPath, const char *scriptLabel);
     int robotServiceRegisterPercentageEvent(double percent,const char *scriptPath);
+    int robotServiceScriptRunSetSpeedLimitPercent(const double speedLimit);
+    int robotServiceScriptRunGetSpeedLimitPercent(double &speedLimitPercent);
 public: //关节驱动升级
     int startUpdateJointFirmware(int jointId, const char *updateFilePath);
     int getUpdateJointFirmwareResult(bool &isFinished, bool &isSucceed);
@@ -1478,6 +1583,8 @@ public: //关节驱动升级
 
     // 获取 movep 当前进度
     int getMovepSequenceNumber(int &num);
+
+    int getCollisionCurrentThreshold(aubo_robot_namespace::CollisionCurrent &current);
 
 public:  //调速模式
     //设置调速模式配置

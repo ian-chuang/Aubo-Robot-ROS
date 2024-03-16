@@ -5,20 +5,21 @@
   <arg name="robot_ip" default="192.168.0.4" />
 
   <!-- joint group pos control -->
-  <!-- <arg name="controllers" default="joint_state_controller joint_group_pos_controller" />
-  <arg name="stopped_controllers" default="cartesian_motion_controller motion_control_handle" /> -->
+  <arg name="controllers" default="joint_state_controller cartesian_motion_controller motion_control_handle" />
+  <arg name="stopped_controllers" default="" />
 
   <!-- cartesian motion control -->
   <!-- <arg name="controllers" default="joint_state_controller cartesian_motion_controller motion_control_handle" />
   <arg name="stopped_controllers" default="joint_group_pos_controller" /> -->
 
   <!-- joint traj control -->
-  <arg name="controllers" default="joint_state_controller pos_joint_traj_controller" />
-  <arg name="stopped_controllers" default="joint_group_pos_controller cartesian_motion_controller motion_control_handle" />
+  <!-- <arg name="controllers" default="joint_state_controller pos_joint_traj_controller" />
+  <arg name="stopped_controllers" default="joint_group_pos_controller cartesian_motion_controller motion_control_handle" /> -->
 
   <!-- Set the robot urdf on the parameter server -->
   <arg name="urdf_path" default="$(find aubo_i5_description)/urdf/aubo_i5.xacro" />
   <param name="robot_description" command="xacro '$(arg urdf_path)'" />
+  <param name="controller_urdf_path" value="$(find aubo_ros_control)/urdf/aubo_i5.urdf"/>
 
   <!-- Load controller settings -->
   <arg name="controller_config_file" default="$(find aubo_ros_control)/config/aubo_controllers.yaml" />

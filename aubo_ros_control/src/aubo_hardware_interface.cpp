@@ -87,7 +87,7 @@ bool AuboHardwareInterface::init(ros::NodeHandle &root_nh, ros::NodeHandle &robo
 
         // connect and register the joint position saturation interface
         pjs_interface_.registerHandle(
-            joint_limits_interface::PositionJointSaturationHandle(pj_interface_.getHandle(joint_names_[i]), joint_limits));
+            PositionJointSaturationHandle(pj_interface_.getHandle(joint_names_[i]), joint_limits));
     }
 
     // Register interfaces
@@ -98,8 +98,8 @@ bool AuboHardwareInterface::init(ros::NodeHandle &root_nh, ros::NodeHandle &robo
     // initialize driver
     aubo_driver_.reset(new AuboDriver(
         robot_ip,
-        3.14, // make this as high as possible to avoid joint limits
-        3.14, // make this as high as possible to avoid joint limits
+        5.0, // make this as high as possible to avoid joint limits
+        10.0, // make this as high as possible to avoid joint limits
         servoj_time_,
         servoj_smooth_scale,
         servoj_delay_scale));
@@ -131,17 +131,21 @@ void AuboHardwareInterface::read(const ros::Time &time, const ros::Duration &per
 
 void AuboHardwareInterface::write(const ros::Time &time, const ros::Duration &period)
 {
-    pjs_interface_.enforceLimits(period);
+
+
+    // pjs_interface_.enforceLimits(period);
+
 
     stopwatch_now_ = std::chrono::steady_clock::now();
     double stopwatch_period = std::chrono::duration_cast<std::chrono::duration<double>>(stopwatch_now_ - stopwatch_last_).count();
+
     
     // HACK: set the delay before sending the next command to the robot
     // to avoid sending commands too fast
     // delay is thresholded to be within 90% and 110% of the control period
     double delay = servoj_total_delay_time_ - servoj_buffer_time_ - stopwatch_period;
-    delay = std::min(delay, (servoj_time_ * 1.1) - stopwatch_period);
-    delay = std::max(delay, (servoj_time_ * 0.9) - stopwatch_period);
+    delay = std::min(delay, (servoj_time_ * 1.2) - stopwatch_period);
+    delay = std::max(delay, (servoj_time_ * 0.8) - stopwatch_period);
     delay = std::max(delay, 0.0);
 
     if (!compareJoints(joint_position_command_, prev_joint_position_command_)) {
@@ -150,15 +154,19 @@ void AuboHardwareInterface::write(const ros::Time &time, const ros::Duration &pe
         servoj_total_delay_time_ = aubo_driver_->servoJ(joint_position_command_, false);
         prev_joint_position_command_ = joint_position_command_;
         robot_stopped_ = false;
+
+        ROS_INFO("servoj time buffer (s): %f", servoj_total_delay_time_);
     }
     else if (!robot_stopped_) {
         usleep(delay * 1000000);
 
         servoj_total_delay_time_ = aubo_driver_->servoJ(joint_position_command_, true);
         robot_stopped_ = true;
+
+        ROS_INFO("servoj time buffer (s): %f", servoj_total_delay_time_);
     }
 
-    ROS_INFO("servoj time buffer (s): %f", servoj_total_delay_time_);
+    
 
     stopwatch_last_ = std::chrono::steady_clock::now();
 }
@@ -172,7 +180,7 @@ bool AuboHardwareInterface::compareJoints(const std::array<double, 6UL> &a, cons
 {
     for (int i = 0; i < 6; i++)
     {
-        if (std::abs(a[i] - b[i]) > 1e-4)
+        if (std::abs(a[i] - b[i]) > 1e-6)
         {
             return false;
         }

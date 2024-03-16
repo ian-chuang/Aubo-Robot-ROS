@@ -1,10 +1,9 @@
 # Settings for ros_control hardware interface
 aubo_hardware_interface:
-   servoj_frequency: &loop_hz 125
+   servoj_frequency: &loop_hz 60
    servoj_smooth_scale: 1
-   servoj_delay_scale: 1
+   servoj_delay_scale: 0.5
    servoj_buffer_time: 0.05
-   read_frequency: 1
    joints: &robot_joints
       - shoulder_pan_joint
       - shoulder_lift_joint
@@ -18,9 +17,9 @@ aubo_hardware_interface:
          min_position: -3.04
          max_position: 3.04
          has_velocity_limits: true
-         max_velocity: 0.15 # 0.05
+         max_velocity: 3.14 # 0.05
          has_acceleration_limits: true
-         max_acceleration: 0.15 #0.05
+         max_acceleration: 3.14 #0.05
 
 # Publish all joint states ----------------------------------
 joint_state_controller:

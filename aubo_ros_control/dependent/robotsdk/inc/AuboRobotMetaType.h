@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <stdint.h>
+#include <array>
 #include "robotiomatetype.h"
 
 
@@ -72,6 +73,13 @@ typedef enum
     ROBOT_I12 = 21,
     ROBOT_I18 = 22,
     ROBOT_T6 = 23,
+    ROBOT_I5_NET = 24,
+    ROBOT_I20L_1900 = 25,
+    ROBOT_I10_CM01 = 26,
+    ROBOT_I20_BZL = 27,
+    ROBOT_IS10 = 50,
+    ROBOT_IS20 = 51,
+    ROBOT_IS7 = 52,
 }RobotType;
 
 
@@ -164,6 +172,17 @@ typedef struct PACKED
     uint8   controlBoardAbnormalStateFlag;  //主控板(接口板)异常状态标志
 }RobotDiagnosis;
 
+typedef struct PACKED
+{
+    // 理论电流
+    int32_t theory_current[6];
+    // 碰撞阈值电流
+    int32_t collision_threshold_current[6];
+    // 过大力保护阈值电流
+    int32_t overforce_threshold_current[6];
+    // 外力电流（实际电流和理论电流之差）
+    int32_t external_current[6];
+}CollisionCurrent;
 
 typedef struct PACKED
 {
@@ -341,7 +360,6 @@ typedef struct
     uint8 type;
 }RobotAnalogIODesc;
 
-
 typedef struct PACKED
 {
     ToolIOType ioType;
@@ -434,18 +452,36 @@ enum RobotControlCommand
     SetCollisionFreeDrive = 0x10,//碰撞之后进入拖动示教模式
     SetCollisionStuck = 0x11,//碰撞之后进入停止模式
     SetCollisionAdamittance = 0x12,//碰撞之后进入导纳控制模式
+    EnableNewTemperatureCompensation = 0x13, //打开新型温度补偿开关
+    DisableNewTemperatureCompensation = 0x14, //关闭新型温度补偿开关
     EnterDragAndTeachMode=0x15,  //进入拖动示教模式
     ExitDragAndTeachMode=0x16,  //退出拖动示教模式
     EnablePayloadDetect = 0x22, //使能负载检测
     DisablePayloadDetect = 0x23, //失能负载检测
     RobotShutdown=0x24 ,  //上位机指令控制机械臂一类停机，并上传错误
     ClearRobotShutdown=0x25,   //清除上位机一类停机标志
-    EnableFrictionCollisionDetect  = 26,//使能摩擦力模型碰撞检测功能
-    DisableFrictionCollisionDetect = 27, //失能摩擦力模型碰撞检测功能
+    EnableFrictionCollisionDetect  = 0x26,//使能摩擦力模型碰撞检测功能
+    DisableFrictionCollisionDetect = 0x27, //失能摩擦力模型碰撞检测功能
+    EnableCollisionStuckBrake = 0x28,   //使能碰撞stuck模式锁刹车
+    DisableCollisionStuckBrake = 0x29,  //失能能碰撞stuck模式锁刹车
+    EnableNewForceTeach = 0x2a, //打开新型拖动示教开关
+    DisableNewForceTeach = 0x2b, //关闭新型拖动示教开关
+
 };
 
 
+enum ROBOT_DI_ACTION{
+    IN_CLEAR_ALARM = 0,
+    IN_ACTION_MAX
+};
 
+enum ROBOT_DO_ACTION{
+    OUT_LINKAGE_RUNNING = 0,
+    OUT_LINKAGE_STOP,
+    OUT_LINKAGE_PAUSE,
+    OUT_LINKAGE_ORIGIN_POSE,
+    OUT_ACTION_MAX
+};
 
 
 /**
@@ -627,6 +663,9 @@ enum move_track
     JOINT_TOPF,
 
     JOINT_MOVE_PROCESS,           // moveP in ARAL
+    SPEEDJ,                       // moveP in ARAL
+    SPEEDL,                       // moveP in ARAL
+    POLYLINE,                     // 多段直线
 
     ARC = 90,
     CIRCLE,
@@ -634,6 +673,7 @@ enum move_track
     CIRCLE_ORI_ROTATED,
 
     ORI_POSITION_ROTATE_CIRCUMFERENCE=101,
+
 };
 
 
@@ -1006,10 +1046,12 @@ typedef enum
 //关节类型参数信息
 typedef struct PACKED
 {
-    uint8 res;
-    JointRatioType reduction_ratio;
-    JointMotorType motor_type;
-    JointModuleType module_type;
+    uint16_t joint_type;
+    uint16_t motor_encoder_line;
+    uint16_t reduce_ratio;
+    uint16_t joint_software_version;
+    uint32_t res1;
+    uint32_t res2;
 }JointTypeParameter;
 
 
@@ -1396,6 +1438,7 @@ typedef enum{
 
     RobotEventNotifyScriptRunLabel              = 3300,  //通知性事件:脚本运行标签
     RobotEventNotifyScriptTraceInfo             = 3301,  //通知性事件:脚本Print
+    RobotEventNotifyScriptSetVariable          = 3302,  // 通知性事件:设置示教器全局变量值
 
     RobotEventNotifyJointUpdateFinishSucc       = 3400,  // 关节驱动升级结束：成功
     RobotEventNotifyJointUpdateFinishFailed     = 3401,  // 关节驱动升级结束：失败
@@ -1590,6 +1633,115 @@ typedef enum
 
 }RobotErrorCode;
 
+
+enum class MoveModeType : int
+{
+    NONE = 0,
+    MOVE_GROUP,
+    SERVOJ,
+    FORCE_TEACH,
+};
+
+class IdAction
+{
+public:
+    enum IdActionType
+    {
+        WAIT_COND = 0,
+        WAIT_TIME,
+        SET,
+        MOVE_EVENT,
+    };
+
+    int id;
+    IdActionType type;
+    double wait_time_ms;
+    std::string script;
+    double move_event_percent;
+};
+
+struct FtSensorCalibResult
+{
+    double error;               // 标定误差
+    std::array<double, 6> offset;           // 传感器偏置
+    double payload_mass;        // 负载质量
+    std::array<double, 3> payload_center;   // 负载重心
+};// 末端传感器辨识结果
+
+enum class ConveyerTrackingType
+{
+    LINE_SENSOR = 0,    // 直线传送带-无视觉
+    LINE_VISION,        // 直线传送带-有视觉
+};
+
+enum class EncoderType
+{
+    INTERNAL = 0,    // 接口板直接获取
+    EXTERNAL,        // 通过外部编码器板读取
+};
+
+struct EncoderParam
+{
+    EncoderType type;   // 内部读取还是外部读取
+    std::string com;    // 串口号（外部读取时才有用）
+    int id;             // 编码器 id（预留给外部读取用）
+    int resolution;     // 编码器线数
+};
+
+enum class CameraType
+{
+    CAMERA_2D_USERCOORD = 0,    // 2D相机-返回工件坐标系下偏移
+    CAMERA_2D_BASECOORD,        // 2D相机-返回机器人基坐标系下偏移
+    CAMERA_3D,                  // 3D相机
+};
+
+enum class CameraProtocolType
+{
+    OK_X_Y_RZ_COMMA = 0,    // OK,x,y,rz or NG,x,y,rz
+};
+
+struct CameraParam
+{
+    std::string ip;                 // 相机 ip
+    int port;                       // 相机 端口
+    CameraType type;                // 相机种类
+    std::string request_str;        // 请求拍照报文
+    CameraProtocolType protocol;    // 相机回传报文协议种类
+};
+
+struct ConveyerParam
+{
+    CoordCalibrateByJointAngleAndTool conveyer_coord;   // 传送带坐标系, X轴为传送带方向
+    double conveyer_coord_offset;                       // 传送带坐标系原点与同步开关距离
+    int encoder_dir;                                    // 编码器与转送带方向关系，1：两者一致，-1：两者相反
+    double encoder_pulse_per_meter;                     // 每米距离对应的脉冲数
+    double range_of_start_window[2];                    // 启动窗口上下限（conveyer_coord 下描述）
+    double max_distance;                                // 允许跟随的最大距离（conveyer_coord 下描述）
+    std::string sync_di_name;                           // 同步开关接入的DI
+    double sync_min_dist;                               // 同步开关最小检测距离
+};
+
+struct TrackingParam
+{
+    ConveyerTrackingType type;  // 跟踪类型
+    double teach_point_offset;  // 示教点时工件与同步开关距离
+    double photo_point_offset;  // 对于 VISION 模式，拍照取模板时工件与同步开关距离
+    double rotate_center[2];    // 对于 VISION 模式，示教点处旋转中心在传送带坐标系下的xy
+    double extern_offset;       // 传送带方向外部补偿值
+};
+
+typedef struct PACKED
+{
+    int32_t encoder_count;  //编码器读数
+    int32_t encoder_speed;  //编码器速度  脉冲数/秒
+    uint8_t encoder_dir;    //编码器方向 0-反  1-正
+}ExternEncoderStatus;
+
+enum class ConveyerTrackingResult : int
+{
+    NORMAL = 0,
+    OUTOFDISTANCE,
+};
 
 }
 #ifdef __cplusplus

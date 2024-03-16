@@ -7,7 +7,7 @@
 #include <hardware_interface/joint_state_interface.h>
 #include <joint_limits_interface/joint_limits.h>
 #include <joint_limits_interface/joint_limits_rosparam.h>
-#include <joint_limits_interface/joint_limits_interface.h>
+#include <aubo_ros_control/joint_limit_interface.h>
 #include <aubo_ros_control/aubo_driver.h>
 #include <chrono>
 #include <mutex>
@@ -69,7 +69,7 @@ protected:
 
   hardware_interface::JointStateInterface js_interface_;
   hardware_interface::PositionJointInterface pj_interface_;
-  joint_limits_interface::PositionJointSaturationInterface pjs_interface_;
+  PositionJointSaturationInterface pjs_interface_;
 
   std::array<double, 6UL> joint_position_command_;
   std::array<double, 6UL> joint_positions_;

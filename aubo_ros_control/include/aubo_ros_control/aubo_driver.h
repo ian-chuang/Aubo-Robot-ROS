@@ -2,8 +2,8 @@
 #define AUBO_DRIVER_H
 
 #include "ros/ros.h"
-#include "servoj_sdk/servojinterface.h"
-#include "aubo_sdk/serviceinterface.h"
+#include "servojinterface.h"
+#include "serviceinterface.h"
 #include <chrono>
 #include <algorithm>
 #include <array>

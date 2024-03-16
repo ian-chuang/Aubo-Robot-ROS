@@ -28,6 +28,7 @@ AuboDriver::AuboDriver(
 }
 
 AuboDriver::~AuboDriver() {
+  ROS_INFO("[AuboDriver] Shutting down.");
   if (servoj_connected_) {
     ROS_INFO("[AuboDriver] Disconnecting from servoj interface.");
     disconnectServoJ();
