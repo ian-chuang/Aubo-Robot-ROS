@@ -2,7 +2,7 @@
 
 This repository contains experimental drivers for running Aubo i5 with ROS using Aubo's experimental servoj function. Please contact Aubo for the servoj C++ binaries.
 
-**WARNING:** This implementation is still unstable. Always have an emergency stop ready to push. When running servoj, the robot frequently hits a joint acceleration limit and throws an error. Work is ongoing to apply joint acceleration limits to the hardware interface.
+**WARNING:** This implementation is still unstable. **PLEASE TEST IN SIMULATION MODE FIRST**. TO SWITCH TO SIMULATION MODE, NAVIGATE TO TEACH/CONTROL WINDOW ON AUBO TEACH PENDANT AND SWITCH TO SIMULATED CONTROL. Always have an emergency stop ready to push. When running servoj, the robot frequently hits a joint acceleration limit and throws an error. Work is ongoing to apply joint acceleration limits to the hardware interface.
 
 ## Requirements
 - Aubo software v4.5.57-a14
