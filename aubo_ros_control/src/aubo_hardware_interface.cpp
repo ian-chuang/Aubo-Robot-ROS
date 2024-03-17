@@ -1,11 +1,11 @@
 #include "aubo_ros_control/aubo_hardware_interface.h"
 
 AuboHardwareInterface::AuboHardwareInterface()
-    : joint_positions_({0, 0, 0, 0, 0, 0}),
+    : joint_positions_({0, 0, -1.57, 0, -1.57, 0}),
       joint_velocities_({0, 0, 0, 0, 0, 0}),
       joint_efforts_({0, 0, 0, 0, 0, 0}),
-      joint_position_command_({0, 0, 0, 0, 0, 0}),
-      prev_joint_position_command_({0, 0, 0, 0, 0, 0}),
+      joint_position_command_({0, 0, -1.57, 0, -1.57, 0}),
+      prev_joint_position_command_({0, 0, -1.57, 0, -1.57, 0}),
       joint_names_(6),
       robot_stopped_(true),
       servoj_total_delay_time_(0)
@@ -85,20 +85,18 @@ bool AuboHardwareInterface::init(ros::NodeHandle &root_nh, ros::NodeHandle &robo
         pj_interface_.registerHandle(
             hardware_interface::JointHandle(js_interface_.getHandle(joint_names_[i]), &joint_position_command_[i]));
 
-        // connect and register the joint position saturation interface
-        pjs_interface_.registerHandle(
-            PositionJointSaturationHandle(pj_interface_.getHandle(joint_names_[i]), joint_limits));
+        otg_interface_.registerHandle(OTGHandle(pj_interface_.getHandle(joint_names_[i]), joint_limits, servoj_time_));
     }
 
     // Register interfaces
     registerInterface(&js_interface_);
     registerInterface(&pj_interface_);
-    registerInterface(&pjs_interface_);
+    registerInterface(&otg_interface_);
 
     // initialize driver
     aubo_driver_.reset(new AuboDriver(
         robot_ip,
-        5.0, // make this as high as possible to avoid joint limits
+        3.14, // make this as high as possible to avoid joint limits
         10.0, // make this as high as possible to avoid joint limits
         servoj_time_,
         servoj_smooth_scale,
@@ -132,9 +130,7 @@ void AuboHardwareInterface::read(const ros::Time &time, const ros::Duration &per
 void AuboHardwareInterface::write(const ros::Time &time, const ros::Duration &period)
 {
 
-
-    // pjs_interface_.enforceLimits(period);
-
+    otg_interface_.enforceLimits(period);
 
     stopwatch_now_ = std::chrono::steady_clock::now();
     double stopwatch_period = std::chrono::duration_cast<std::chrono::duration<double>>(stopwatch_now_ - stopwatch_last_).count();
@@ -148,25 +144,32 @@ void AuboHardwareInterface::write(const ros::Time &time, const ros::Duration &pe
     delay = std::max(delay, (servoj_time_ * 0.8) - stopwatch_period);
     delay = std::max(delay, 0.0);
 
-    if (!compareJoints(joint_position_command_, prev_joint_position_command_)) {
-        usleep(delay * 1000000);
+    usleep(delay * 1000000);
 
-        servoj_total_delay_time_ = aubo_driver_->servoJ(joint_position_command_, false);
-        prev_joint_position_command_ = joint_position_command_;
-        robot_stopped_ = false;
+    servoj_total_delay_time_ = aubo_driver_->servoJ(joint_position_command_, false);
+    prev_joint_position_command_ = joint_position_command_;
+    robot_stopped_ = false;
 
-        ROS_INFO("servoj time buffer (s): %f", servoj_total_delay_time_);
-    }
-    else if (!robot_stopped_) {
-        usleep(delay * 1000000);
+    ROS_INFO("servoj time buffer (s): %f", servoj_total_delay_time_);
 
-        servoj_total_delay_time_ = aubo_driver_->servoJ(joint_position_command_, true);
-        robot_stopped_ = true;
 
-        ROS_INFO("servoj time buffer (s): %f", servoj_total_delay_time_);
-    }
+    // if (!compareJoints(joint_position_command_, prev_joint_position_command_)) {
+    //     usleep(delay * 1000000);
 
-    
+    //     servoj_total_delay_time_ = aubo_driver_->servoJ(joint_position_command_, false);
+    //     prev_joint_position_command_ = joint_position_command_;
+    //     robot_stopped_ = false;
+
+    //     ROS_INFO("servoj time buffer (s): %f", servoj_total_delay_time_);
+    // }
+    // else if (!robot_stopped_) {
+    //     usleep(delay * 1000000);
+
+    //     servoj_total_delay_time_ = aubo_driver_->servoJ(joint_position_command_, true);
+    //     robot_stopped_ = true;
+
+    //     ROS_INFO("servoj time buffer (s): %f", servoj_total_delay_time_);
+    // }
 
     stopwatch_last_ = std::chrono::steady_clock::now();
 }

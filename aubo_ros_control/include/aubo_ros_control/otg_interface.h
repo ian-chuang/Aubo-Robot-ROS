@@ -3,6 +3,7 @@
 #include <joint_limits_interface/joint_limits.h>
 #include <joint_limits_interface/joint_limits_interface_exception.h>
 #include <joint_limits_interface/joint_limits_interface.h>
+#include <ruckig/ruckig.hpp>
 
 template <typename T>
 T saturate(const T val, const T min_val, const T max_val)
@@ -10,10 +11,10 @@ T saturate(const T val, const T min_val, const T max_val)
     return std::min(std::max(val, min_val), max_val);
 }
 
-class PositionJointSaturationHandle
+class OTGHandle
 {
 public:
-    PositionJointSaturationHandle(const hardware_interface::JointHandle &jh, const joint_limits_interface::JointLimits &limits)
+    OTGHandle(const hardware_interface::JointHandle &jh, const joint_limits_interface::JointLimits &limits, double control_period)
         : jh_(jh),
           limits_(limits)
     {
@@ -30,7 +31,6 @@ public:
         
         if (limits_.has_velocity_limits)
         {
-            min_vel_limit_ = -limits_.max_velocity;
             max_vel_limit_ = limits_.max_velocity;
         }
         else
@@ -40,63 +40,70 @@ public:
 
         if (limits_.has_acceleration_limits)
         {
-            min_acc_limit_ = -limits_.max_acceleration;
             max_acc_limit_ = limits_.max_acceleration;
         }
         else
         {
             throw std::runtime_error("[PositionJointSaturationHandle] Acceleration limits not specified");
         }
+
+        if (limits_.has_jerk_limits)
+        {
+            max_jerk_limit_ = limits_.max_jerk;
+        }
+        else
+        {
+            throw std::runtime_error("[PositionJointSaturationHandle] Jerk limits not specified");
+        }
+
+        otg_ = std::make_shared<ruckig::Ruckig<1>>(control_period);
+        reset();
     }
 
     std::string getName() const { return jh_.getName(); }
 
     void enforceLimits(const ros::Duration &period)
     {
-        if (std::isnan(prev_cmd_)) {
-            prev_cmd_ = jh_.getPosition();
-            prev_vel_ = 0.0;
+        otg_input_.target_position = {jh_.getCommand()};
+        otg_input_.current_position = {jh_.getPosition()};
+        auto result = otg_->update(otg_input_, otg_output_);
+        if (result < 0)
+        {
+            ROS_ERROR_STREAM("Error in trajectory generator: " << result);
         }
-
-        double des_cmd, des_vel, des_acc;
-
-        des_cmd = jh_.getCommand();
-        des_cmd = saturate(des_cmd, min_pos_limit_, max_pos_limit_);
-
-        des_vel = (des_cmd - prev_cmd_) / period.toSec();
-        des_vel = saturate(des_vel, min_vel_limit_, max_vel_limit_);
-
-        des_acc = (des_vel - prev_vel_) / period.toSec();
-        des_acc = saturate(des_acc, min_acc_limit_, max_acc_limit_);
-
-        double new_cmd, new_vel;
-
-        new_vel = prev_vel_ + des_acc * period.toSec();
-        new_cmd = prev_cmd_ + new_vel * period.toSec();
-
-        jh_.setCommand(new_cmd);
-        prev_cmd_ = new_cmd;
-        prev_vel_ = new_vel;
+        double new_position = otg_output_.new_position[0];
+        new_position = saturate(new_position, min_pos_limit_, max_pos_limit_);
+        jh_.setCommand(new_position);
+        otg_output_.pass_to_input(otg_input_);
     }
 
     void reset()
     {
-        prev_cmd_ = std::numeric_limits<double>::quiet_NaN();
-        prev_vel_ = 0.0;
+        otg_input_.current_position = {jh_.getPosition()};
+        otg_input_.current_velocity = {0};
+        otg_input_.current_acceleration = {0};
+        otg_input_.target_position = {jh_.getPosition()};
+        otg_input_.target_velocity = {0};
+        otg_input_.target_acceleration = {0};
+        otg_input_.max_velocity = {max_vel_limit_};
+        otg_input_.max_acceleration = {max_acc_limit_};
+        otg_input_.max_jerk = {max_jerk_limit_};
     }
 
 private:
     hardware_interface::JointHandle jh_;
     joint_limits_interface::JointLimits limits_;
     double min_pos_limit_, max_pos_limit_;
-    double min_vel_limit_, max_vel_limit_;
-    double min_acc_limit_, max_acc_limit_;
+    double max_vel_limit_;
+    double max_acc_limit_;
+    double max_jerk_limit_;
 
-    double prev_cmd_ = {std::numeric_limits<double>::quiet_NaN()};
-    double prev_vel_ = 0.0;
+    std::shared_ptr<ruckig::Ruckig<1>> otg_;
+    ruckig::InputParameter<1> otg_input_;
+    ruckig::OutputParameter<1> otg_output_;
 };
 
-class PositionJointSaturationInterface : public joint_limits_interface::JointLimitsInterface<PositionJointSaturationHandle> {
+class OTGInterface : public joint_limits_interface::JointLimitsInterface<OTGHandle> {
  public:
    void reset()
    {
