@@ -18,6 +18,19 @@ This repository contains experimental drivers for running Aubo i5 with ROS using
 - Modified ROS controllers are available in the provided forked repositories.
 
 ## Installation
+
+1. Install Ruckig for online trajectory generation:
+
+   ```bash
+   cd ~
+   git clone https://github.com/pantor/ruckig.git
+   cd ruckig
+   mkdir -p build
+   cd build
+   cmake -DCMAKE_BUILD_TYPE=Release ..
+   sudo make install
+   ```
+
 1. Clone this repository into your ROS Noetic workspace:
    
    ```bash
