@@ -1,11 +1,25 @@
 moveit_setup_assistant_config:
-  URDF:
+  urdf:
     package: aubo_i5_description
     relative_path: urdf/aubo_i5.xacro
-    xacro_args: ""
-  SRDF:
+  srdf:
     relative_path: config/aubo_i5.srdf
-  CONFIG:
+  package_settings:
     author_name: Ian Chuang
-    author_email: dummy@email.com
-    generated_timestamp: 1694802654
+    author_email: fake@email.com
+    generated_timestamp: 1710901821
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
