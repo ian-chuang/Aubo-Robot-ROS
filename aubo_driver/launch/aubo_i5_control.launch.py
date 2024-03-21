@@ -66,7 +66,7 @@ def generate_launch_description():
             " ",
             PathJoinSubstitution(
                 [
-                    FindPackageShare("aubo_driver"),
+                    FindPackageShare("aubo_i5_description"),
                     "urdf",
                     "aubo_i5.urdf.xacro",
                 ]
@@ -101,9 +101,13 @@ def generate_launch_description():
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_controllers],
-        # output="both",
-        remappings=[('controller_manager/robot_description', 'robot_description')]
+        parameters=[robot_description, robot_controllers],
+        output="both",
+        remappings=[
+            ('motion_control_handle/target_frame', 'target_frame'),
+            ('cartesian_motion_controller/target_frame', 'target_frame'),
+            ('controller_manager/robot_description', 'robot_description'),
+        ],
     )
     robot_state_pub_node = Node(
         package="robot_state_publisher",
@@ -120,70 +124,32 @@ def generate_launch_description():
         condition=IfCondition(gui),
     )
 
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-    )
+    def controller_spawner(name, *args):
+        return Node(
+            package="controller_manager",
+            executable="spawner",
+            output="screen",
+            arguments=[name] + [a for a in args],
+        )
 
-    robot_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_trajectory_controller", "--controller-manager", "/controller_manager"],
-    )
-    print("\n\n\n\n\n")
-    moveit_config = (
-        MoveItConfigsBuilder(
-            "aubo_i5", package_name="aubo_i5_moveit_config"
-        )
-        .trajectory_execution(file_path="config/moveit_controllers.yaml")
-        .planning_scene_monitor(
-            publish_robot_description=False, publish_robot_description_semantic=True
-        )
-        .planning_pipelines(
-            pipelines=["ompl", "pilz_industrial_motion_planner"]
-        )
-        .to_moveit_configs()
-    )
-    print(moveit_config.to_dict())
-    move_group_node = Node(
-        package="moveit_ros_move_group",
-        executable="move_group",
-        output="screen",
-        parameters=[moveit_config.to_dict()],
-    )
+    # Active controllers
+    active_list = [
+        "joint_state_broadcaster",
+        "cartesian_motion_controller",
+        "motion_control_handle"
+    ]
+    active_spawners = [controller_spawner(controller) for controller in active_list]
 
-    # Delay rviz start after `joint_state_broadcaster`
-    delay_rviz_after_joint_state_broadcaster_spawner = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=joint_state_broadcaster_spawner,
-            on_exit=[rviz_node],
-        )
-    )
-
-    # Delay start of move_group after `joint_state_broadcaster`
-    delay_move_group_after_joint_state_broadcaster_spawner = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=joint_state_broadcaster_spawner,
-            on_exit=[move_group_node],
-        )
-    )
-
-    # Delay start of robot_controller after `joint_state_broadcaster`
-    delay_robot_controller_spawner_after_joint_state_broadcaster_spawner = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=joint_state_broadcaster_spawner,
-            on_exit=[robot_controller_spawner],
-        )
-    )
+    # Inactive controllers
+    inactive_list = [
+        "joint_trajectory_controller",
+    ]
+    inactive_spawners = [controller_spawner(controller, "--inactive") for controller in inactive_list]
 
     nodes = [
         control_node,
         robot_state_pub_node,
-        joint_state_broadcaster_spawner,
-        delay_rviz_after_joint_state_broadcaster_spawner,
-        delay_move_group_after_joint_state_broadcaster_spawner,
-        delay_robot_controller_spawner_after_joint_state_broadcaster_spawner,
-    ]
+        rviz_node,
+    ] + active_spawners + inactive_spawners
 
     return LaunchDescription(declared_arguments + nodes)
