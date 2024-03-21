@@ -1,0 +1,9 @@
+<library path="aubo_driver_plugin">
+  <class name="aubo_driver/AuboPositionHardwareInterface"
+         type="aubo_driver::AuboPositionHardwareInterface"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+		ROS2 Control System Driver for the Aubo Robot.
+    </description>
+  </class>
+</library>

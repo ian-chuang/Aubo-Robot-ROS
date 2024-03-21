@@ -3,7 +3,7 @@
     <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
 
     <!-- Import aubo_i5 urdf file -->
-    <xacro:include filename="$(find aubo_i5_description)/urdf/aubo_i5.xacro" />
+    <xacro:include filename="$(find aubo_i5_description)/urdf/aubo_i5.urdf.xacro" />
 
     <!-- Import control_xacro -->
     <xacro:include filename="aubo_i5.ros2_control.xacro" />
