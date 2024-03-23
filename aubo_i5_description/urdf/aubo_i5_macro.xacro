@@ -13,7 +13,7 @@
     <xacro:property name="max_effort_1" value="300.0" />
     <xacro:property name="max_effort_2" value="50.0" />
 
-    <link name="${prefix}base_link">
+    <link name="${prefix}aubo_i5_base_link">
       <inertial>
         <origin xyz="5.280333978763784e-09 0.0015966894220128586 0.016570455971104445" rpy="0 0 0" />
         <mass value="1.4382166298722134" />
@@ -173,13 +173,13 @@
 
     <joint name="${prefix}base_joint" type="fixed">
       <parent link="${parent}" />
-      <child link="${prefix}base_link" />
+      <child link="${prefix}aubo_i5_base_link" />
       <xacro:insert_block name="origin" />
     </joint>
 
     <joint name="${prefix}shoulder_pan_joint" type="revolute">
       <origin xyz="0.0 0.0 0.0435" rpy="0 0 0" />
-      <parent link="${prefix}base_link" />
+      <parent link="${prefix}aubo_i5_base_link" />
       <child link="${prefix}shoulder_link" />
       <axis xyz="-0.0 0.0 1.0" />
       <limit lower="${lower_limit}" upper="${upper_limit}" velocity="${max_velocity}"
