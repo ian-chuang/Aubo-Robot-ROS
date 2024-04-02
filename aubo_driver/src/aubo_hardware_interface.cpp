@@ -62,7 +62,7 @@ AuboPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& s
       return hardware_interface::CallbackReturn::ERROR;
     }
 
-    if (joint.state_interfaces.size() != 1)
+    if (joint.state_interfaces.size() != 2)
     {
       RCLCPP_FATAL(
         rclcpp::get_logger("AuboPositionHardwareInterface"),
@@ -79,6 +79,12 @@ AuboPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& s
         joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
       return hardware_interface::CallbackReturn::ERROR;
     }
+    if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
+      RCLCPP_FATAL(rclcpp::get_logger("AuboPositionHardwareInterface"),
+                   "Joint '%s' have %s state interface as second state interface. '%s' expected.", joint.name.c_str(),
+                   joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
+      return hardware_interface::CallbackReturn::ERROR;
+    }
   }
 
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -91,6 +97,8 @@ std::vector<hardware_interface::StateInterface> AuboPositionHardwareInterface::e
   {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
       info_.joints[i].name, hardware_interface::HW_IF_POSITION, &joint_positions_[i]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &joint_velocities_[i]));
   }
 
   return state_interfaces;
@@ -205,6 +213,7 @@ hardware_interface::return_type AuboPositionHardwareInterface::read(const rclcpp
   // avoid reading from the robot to reduce latency
   // also avoids having another control loop running for position control
   joint_positions_ = joint_position_command_; 
+  joint_velocities_ = otg_output_.new_velocity;
   return hardware_interface::return_type::OK;
 }
 

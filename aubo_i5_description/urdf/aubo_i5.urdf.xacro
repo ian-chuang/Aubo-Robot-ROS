@@ -15,7 +15,6 @@
   <xacro:aubo_i5
     prefix="$(arg prefix)"
     parent="world"
-    tcp_offset="0"
   >
     <origin xyz="0 0 0" rpy="0 0 0" />
   </xacro:aubo_i5>

@@ -56,7 +56,7 @@ cartesian_motion_controller:
 
     # See the cartesian_compliance_controller
     end_effector_link: "tcp_link"
-    robot_base_link: "base_link"
+    robot_base_link: "aubo_i5_base_link"
     joints:
       - shoulder_pan_joint
       - shoulder_lift_joint
@@ -86,7 +86,7 @@ cartesian_motion_controller:
 motion_control_handle:
   ros__parameters:
     end_effector_link: "tcp_link"
-    robot_base_link: "base_link"
+    robot_base_link: "aubo_i5_base_link"
     # ft_sensor_ref_link: "tool0"
     joints:
       - shoulder_pan_joint

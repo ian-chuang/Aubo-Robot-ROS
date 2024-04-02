@@ -30,6 +30,7 @@
           <param name="max">3.04</param>
         </command_interface>
         <state_interface name="position"/>
+        <state_interface name="velocity"/>
       </joint>
       <joint name="${prefix}shoulder_lift_joint">
         <command_interface name="position">
@@ -37,6 +38,7 @@
           <param name="max">3.04</param>
         </command_interface>
         <state_interface name="position"/>
+        <state_interface name="velocity"/>
       </joint>
       <joint name="${prefix}elbow_joint">
         <command_interface name="position">
@@ -44,13 +46,15 @@
           <param name="max">3.04</param>
         </command_interface>
         <state_interface name="position"/>
+        <state_interface name="velocity"/>
       </joint>
       <joint name="${prefix}wrist_1_joint">
         <command_interface name="position">
           <param name="min">-3.04</param>
           <param name="max">3.04</param>
         </command_interface>
-        <state_interface name="position"/>
+        <state_interface name="position"/> 
+        <state_interface name="velocity"/>
       </joint>
       <joint name="${prefix}wrist_2_joint">
         <command_interface name="position">
@@ -58,6 +62,7 @@
           <param name="max">3.04</param>
         </command_interface>
         <state_interface name="position"/>
+        <state_interface name="velocity"/>
       </joint>
       <joint name="${prefix}wrist_3_joint">
         <command_interface name="position">
@@ -65,6 +70,7 @@
           <param name="max">3.04</param>
         </command_interface>
         <state_interface name="position"/>
+        <state_interface name="velocity"/>
       </joint>
     </ros2_control>
 
