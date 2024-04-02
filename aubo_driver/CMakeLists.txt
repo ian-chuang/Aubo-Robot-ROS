@@ -136,7 +136,7 @@ ament_export_dependencies(
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
  
-install(DIRECTORY config launch urdf rviz test dependent
+install(DIRECTORY config launch urdf rviz dependent
   DESTINATION share/${PROJECT_NAME}
 )
 

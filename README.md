@@ -1,78 +1,65 @@
 # Aubo-Robot-ROS
 
-This repository contains experimental drivers for running Aubo i5 with ROS using Aubo's experimental servoj function. Please contact Aubo for the servoj C++ binaries.
+This repository contains experimental drivers for running the Aubo i5 robot with ROS 2 using Aubo's experimental servoj function.
 
-**WARNING:** This implementation is still unstable. **PLEASE TEST IN SIMULATION MODE FIRST**. TO SWITCH TO SIMULATION MODE, NAVIGATE TO TEACH/CONTROL WINDOW ON AUBO TEACH PENDANT AND SWITCH TO SIMULATED CONTROL. Always have an emergency stop ready to push. When running servoj, the robot frequently hits a joint acceleration limit and throws an error. Work is ongoing to apply joint acceleration limits to the hardware interface.
+**Important**: This driver requires libraries provided exclusively by Aubo.
 
-## Requirements
+**WARNING:** This implementation is still unstable. **PLEASE TEST IN SIMULATION MODE FIRST**. TO SWITCH TO SIMULATION MODE, NAVIGATE TO THE TEACH/CONTROL WINDOW ON THE AUBO TEACH PENDANT AND SWITCH TO SIMULATED CONTROL. Always have an emergency stop ready to push.
+
+## Tested On:
 - Aubo software v4.5.57-a14
 - Firmware v3.4.46
-- ROS Noetic
-
-## Features
-- Updated Aubo i5 URDF with color and improved accuracy
-- MoveIt configuration package included
-
-## Issues and Workarounds
-- There are issues with the servoj C++ binaries, causing a seg fault when loading URDF objects in C++.
-- Modified ROS controllers are available in the provided forked repositories.
+- ROS2 Humble
+- Ubuntu 22.04
 
 ## Installation
 
-1. Install Ruckig for online trajectory generation:
-
+1. Source ROS2 Humble:
    ```bash
-   cd ~
-   git clone https://github.com/pantor/ruckig.git
-   cd ruckig
-   mkdir -p build
-   cd build
-   cmake -DCMAKE_BUILD_TYPE=Release ..
-   sudo make install
+   source /opt/ros/humble/setup.bash
    ```
 
-1. Clone this repository into your ROS Noetic workspace:
-   
+2. Clone the repository into your ROS2 workspace:
    ```bash
-   cd ~/your_ws/src
-   git clone https://github.com/ian-chuang/Aubo-Robot-ROS.git
+   cd /path/to/your_ros2_ws/src
+   git clone -b humble https://github.com/ian-chuang/dh_ag95_gripper_ros2.git
    ```
 
-2. Add the lib files to the following directories:
-   - `aubo_ros_control/dependent/robotsdk/lib/linux_x64`
-   - `aubo_ros_control/dependent/servojsdk/lib/linux_x64`
+3. Add the lib files (.so files) provided by Aubo to the following directories:
+   - `aubo_driver/dependent/robotsdk/lib/linux_x64`
+   - `aubo_driver/dependent/servojsdk/lib/linux_x64`
 
-3. If you want to use Cartesian control or joint trajectory controller, clone these as well:
-    ```bash
-    git clone -b aubo https://github.com/ian-chuang/cartesian_controllers.git 
-    git clone -b aubo https://github.com/ian-chuang/ros_controllers 
-    ```
+4. Install dependencies using rosdep:
+   ```bash
+   rosdep install -i --from-path . --rosdistro humble -y
+   ```
 
-4. Install required dependencies for building:
-    ```bash
-    sudo apt install ros-noetic-catkin python3-catkin-tools
-    cd ~/your_ws/src
-    rosdep install -y --from-paths . --ignore-src --rosdistro noetic
-    ```
+5. Build the package:
+   ```bash
+   colcon build
+   ```
+
+6. Source the setup files:
+   ```bash
+   source /path/to/your_ros2_ws/install/local_setup.bash
+   ```
 
 ## Usage
-To launch the robot, use the following command with your robot's IP address:
+To launch the robot, use the following command with your robot's IP address (XXX.XXX.XXX.XXX). You can find your robot's IP on the teach pendant by going to Settings -> System -> Network and clicking the 'ifconfig' button. This will start the joint trajectory controller, which you can view in `aubo_driver/config`.
+
+NOTE: Without MoveIt, it is difficult to control the robot using the joint trajectory controller. I suggest trying the Cartesian motion controller available at [cartesian_controllers](https://github.com/Soltanilara/cartesian_controllers).
+
 ```bash
-roslaunch aubo_ros_control aubo_bringup.launch robot_ip:=<your robot ip>
+ros2 launch aubo_driver aubo_i5_control.launch.py robot_ip:=<your robot ip>
 ```
 
-Try out different controllers by modifying the launch file at `aubo_ros_control/launch/aubo_bringup.launch`.
+View the URDF with this command:
+```bash
+ros2 launch aubo_i5_description view_aubo_i5.launch.py
+```
 
 ### MoveIt Integration
-Switch your controller to use MoveIt:
-```xml
-<arg name="controllers" default="joint_state_controller pos_joint_traj_controller"/>
+To control the robot with MoveIt2, try out the `aubo_i5_moveit_config` package:
+```bash
+ros2 launch aubo_i5_moveit_config aubo_i5_moveit.launch.py robot_ip:=<your robot ip>
 ```
-Then enable the MoveIt plugin within RViz.
-
-### Cartesian Motion Control
-Switch your controller to use Cartesian motion control:
-```xml
-<arg name="controllers" default="joint_state_controller cartesian_motion_controller motion_control_handle"/>
-```
-Then enable the Robot Model and Interactive Marker plugin within RViz.

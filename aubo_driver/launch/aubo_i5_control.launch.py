@@ -104,8 +104,6 @@ def generate_launch_description():
         parameters=[robot_description, robot_controllers],
         output="both",
         remappings=[
-            ('motion_control_handle/target_frame', 'target_frame'),
-            ('cartesian_motion_controller/target_frame', 'target_frame'),
             ('controller_manager/robot_description', 'robot_description'),
         ],
     )
@@ -135,15 +133,12 @@ def generate_launch_description():
     # Active controllers
     active_list = [
         "joint_state_broadcaster",
-        "cartesian_motion_controller",
-        "motion_control_handle"
+        "joint_trajectory_controller",
     ]
     active_spawners = [controller_spawner(controller) for controller in active_list]
 
     # Inactive controllers
-    inactive_list = [
-        "joint_trajectory_controller",
-    ]
+    inactive_list = []
     inactive_spawners = [controller_spawner(controller, "--inactive") for controller in inactive_list]
 
     nodes = [
