@@ -87,6 +87,7 @@ def generate_launch_description():
     )
     robot_description = {"robot_description": robot_description_content}
 
+    # controllers config file
     robot_controllers = PathJoinSubstitution(
         [
             FindPackageShare("aubo_driver"),
@@ -94,10 +95,12 @@ def generate_launch_description():
             "aubo_i5_controllers.yaml",
         ]
     )
+    # rviz config file
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare("aubo_driver"), "rviz", "aubo_i5_control.rviz"]
     )
-
+    
+    # controller manager node
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -107,12 +110,14 @@ def generate_launch_description():
             ('controller_manager/robot_description', 'robot_description'),
         ],
     )
+    # publish robot state
     robot_state_pub_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
         parameters=[robot_description],
     )
+    # rviz node
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
@@ -121,7 +126,8 @@ def generate_launch_description():
         arguments=["-d", rviz_config_file],
         condition=IfCondition(gui),
     )
-
+    
+    # helper function to spawn controllers
     def controller_spawner(name, *args):
         return Node(
             package="controller_manager",

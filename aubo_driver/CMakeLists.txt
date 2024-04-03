@@ -44,6 +44,7 @@ add_library(
   src/aubo_hardware_interface.cpp
   src/aubo_driver.cpp
 )
+# specify aubo sdk libraries directories
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   target_link_directories(
     aubo_driver_plugin 
@@ -59,6 +60,7 @@ else()
     dependent/servojsdk/lib/linux_x32
   )
 endif()
+# link libraries, including ruckig and aubo sdk
 target_link_libraries(
   aubo_driver_plugin
   -laral
@@ -66,6 +68,7 @@ target_link_libraries(
   -lservojsdk
   ruckig::ruckig
 )
+# include directories, also include aubo sdk headers
 target_include_directories(
   aubo_driver_plugin
   PRIVATE
@@ -90,6 +93,7 @@ install(
   DESTINATION include
 )
 
+# add dependent libraries to install
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   install(
     FILES 
