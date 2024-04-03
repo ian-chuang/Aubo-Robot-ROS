@@ -6,6 +6,7 @@ moveit_simple_controller_manager:
   controller_names:
     - joint_trajectory_controller
 
+  # Important: I name controller as joint_trajectory_controller to match ros2_control configuration
   joint_trajectory_controller:
     type: FollowJointTrajectory
     action_ns: follow_joint_trajectory

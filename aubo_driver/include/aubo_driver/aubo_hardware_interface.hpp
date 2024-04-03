@@ -38,31 +38,37 @@ public:
   RCLCPP_SHARED_PTR_DEFINITIONS(AuboPositionHardwareInterface)
   virtual ~AuboPositionHardwareInterface();
 
+  // on hardware interface initialization
   hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareInfo& system_info) final;
 
+  // export state and command interfaces
   std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
-
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() final;
 
+  // lifecycle callbacks
   hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) final;
 
+  // read and write methods
   hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period) final;
   hardware_interface::return_type write(const rclcpp::Time& time, const rclcpp::Duration& period) final;
 
 protected:
+  // manage joint commands and states
   std::array<double, 6UL> joint_position_command_;
   std::array<double, 6UL> prev_joint_position_command_;
   std::array<double, 6UL> joint_positions_;
   std::array<double, 6UL> joint_velocities_;
   std::array<double, 6UL> joint_efforts_;
 
+  // Aubo Driver and parameters
   std::unique_ptr<AuboDriver> aubo_driver_;
   double servoj_time_;
   double servoj_buffer_time_;
   double servoj_total_delay_time_;
 
+  // Ruckig Online Trajectory Generator
   std::unique_ptr<ruckig::Ruckig<6>> otg_;
   ruckig::InputParameter<6> otg_input_;
   ruckig::OutputParameter<6> otg_output_;
@@ -70,6 +76,7 @@ protected:
   std::array<double, 6UL> max_acc_limit_;
   std::array<double, 6UL> max_jerk_limit_;
 
+  // stopwatch for timing
   std::chrono::_V2::steady_clock::time_point stopwatch_last_;
   std::chrono::_V2::steady_clock::time_point stopwatch_now_;
 

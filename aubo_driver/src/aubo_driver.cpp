@@ -26,11 +26,13 @@ AuboDriver::AuboDriver(
     max_joint_acc_arr_[i] =  0;
   }
 
+  // create clients
   servoj_client_ = std::make_unique<ServojInterface>();
   robot_client_ = std::make_unique<ServiceInterface>();
 }
 
 AuboDriver::~AuboDriver() {
+  // disconnect from robot and servoj interface if connected
   if (servoj_connected_) {
     RCLCPP_INFO(rclcpp::get_logger("AuboDriver"), "Disconnecting from servoj interface.");
     disconnectServoJ();
@@ -190,6 +192,7 @@ void AuboDriver::disconnectServoJ()
 
 double AuboDriver::servoJ(std::array<double, 6UL> values, bool is_last_point = false)
 {  
+  // call servoj interface
   double total_delay_time = 0;
   auto servoj_status = servoj_client_->servoj(
       values.data(),
@@ -200,16 +203,22 @@ double AuboDriver::servoJ(std::array<double, 6UL> values, bool is_last_point = f
       servoj_delay_scale_,
       total_delay_time,
       is_last_point);
+
+  // check for errors
   if (servoj_status != 0)
   {
     throw std::runtime_error("[AuboDriver] ServojInterface::servoj failed.");
   }
+
   return total_delay_time;
 }
 
 void AuboDriver::moveJ(std::array<double, 6UL> values)
 {
+  // call movej which is a blocking call
   auto status = robot_client_->robotServiceJointMove(values.data(), true);
+
+  // check for errors
   if (status != aubo_robot_namespace::ErrnoSucc)
   {
     throw std::runtime_error("[AuboDriver] ServiceInterface::robotServiceJointMove failed.");

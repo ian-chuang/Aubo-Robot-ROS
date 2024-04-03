@@ -7,12 +7,15 @@
 
       <hardware>
         <xacro:if value="${use_mock_hardware}">
+          <!-- Mock Hardware -->
           <plugin>mock_components/GenericSystem</plugin>
           <param name="mock_sensor_commands">${mock_sensor_commands}</param>
           <param name="state_following_offset">0.0</param>
         </xacro:if>
         <xacro:unless value="${use_mock_hardware}">
+          <!-- Real Hardware -->
           <plugin>aubo_driver/AuboPositionHardwareInterface</plugin>
+          <!-- Parameters for the AuboPositionHardwareInterface -->
           <param name="robot_ip">${robot_ip}</param>
           <param name="servoj_frequency">80</param>
           <param name="servoj_smooth_scale">1.0</param>
@@ -24,6 +27,7 @@
         </xacro:unless>
       </hardware>
 
+      <!-- Joint interfaces -->
       <joint name="${prefix}shoulder_pan_joint">
         <command_interface name="position">
           <param name="min">-3.04</param>

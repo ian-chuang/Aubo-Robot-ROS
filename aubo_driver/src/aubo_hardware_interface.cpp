@@ -16,6 +16,7 @@ AuboPositionHardwareInterface::~AuboPositionHardwareInterface()
 hardware_interface::CallbackReturn
 AuboPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& system_info)
 {
+  // check if the system interface was initialized correctly
   if (
     hardware_interface::SystemInterface::on_init(system_info) !=
     hardware_interface::CallbackReturn::SUCCESS)
@@ -43,7 +44,7 @@ AuboPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& s
 
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
   {
-    // Aubo has exactly one state and command interface on each joint
+    // Aubo has one position command interface
     if (joint.command_interfaces.size() != 1)
     {
       RCLCPP_FATAL(
@@ -52,7 +53,7 @@ AuboPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& s
         joint.command_interfaces.size());
       return hardware_interface::CallbackReturn::ERROR;
     }
-
+    // confirm that the command interface is of the correct type
     if (joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
     {
       RCLCPP_FATAL(
@@ -62,6 +63,7 @@ AuboPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& s
       return hardware_interface::CallbackReturn::ERROR;
     }
 
+    // Aubo has two state interfaces, position and velocity
     if (joint.state_interfaces.size() != 2)
     {
       RCLCPP_FATAL(
@@ -70,7 +72,7 @@ AuboPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& s
         joint.state_interfaces.size());
       return hardware_interface::CallbackReturn::ERROR;
     }
-
+    // confirm that the first state interface is position 
     if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
     {
       RCLCPP_FATAL(
@@ -79,6 +81,7 @@ AuboPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& s
         joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
       return hardware_interface::CallbackReturn::ERROR;
     }
+    // confirm that the second state interface is velocity
     if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(rclcpp::get_logger("AuboPositionHardwareInterface"),
                    "Joint '%s' have %s state interface as second state interface. '%s' expected.", joint.name.c_str(),
@@ -95,6 +98,7 @@ std::vector<hardware_interface::StateInterface> AuboPositionHardwareInterface::e
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (uint i = 0; i < info_.joints.size(); i++)
   {
+    // export position and velocity state interfaces, joint_positions_ and joint_velocities_ are references
     state_interfaces.emplace_back(hardware_interface::StateInterface(
       info_.joints[i].name, hardware_interface::HW_IF_POSITION, &joint_positions_[i]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -109,6 +113,7 @@ std::vector<hardware_interface::CommandInterface> AuboPositionHardwareInterface:
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (uint i = 0; i < info_.joints.size(); i++)
   {
+    // export position command interface, joint_position_command_ is a reference
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
       info_.joints[i].name, hardware_interface::HW_IF_POSITION, &joint_position_command_[i]));
   }
@@ -124,6 +129,7 @@ AuboPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previ
   // The robot's IP address.
   const std::string robot_ip = info_.hardware_parameters["robot_ip"];
 
+  // servoj parameters initialization
   const int servoj_frequency = stoi(info_.hardware_parameters["servoj_frequency"]);
   const double servoj_time = 1.0 / servoj_frequency;
   const double servoj_smooth_scale = stod(info_.hardware_parameters["servoj_smooth_scale"]);
@@ -132,11 +138,13 @@ AuboPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previ
   servoj_time_ = servoj_time;
   servoj_buffer_time_ = servoj_buffer_time;
 
+  // max joint limits
   const double max_vel_limit = stod(info_.hardware_parameters["max_vel_limit"]);
   const double max_acc_limit = stod(info_.hardware_parameters["max_acc_limit"]);
   const double max_jerk_limit = stod(info_.hardware_parameters["max_jerk_limit"]);  
   for (int i = 0; i < 6; i++)
   {
+    // set max limits for each joint (same for all joints for now)
     max_vel_limit_[i] = max_vel_limit;
     max_acc_limit_[i] = max_acc_limit;
     max_jerk_limit_[i] = max_jerk_limit;
@@ -173,10 +181,11 @@ hardware_interface::CallbackReturn
 AuboPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous_state)
 {
   // fill initial joint positions
-  aubo_driver_->getJointPositions(joint_positions_);
+  aubo_driver_->getJointPositions(joint_positions_); // read current joint positions
   joint_position_command_ = joint_positions_;
   prev_joint_position_command_ = joint_positions_;
 
+  // initialize ruckig otg input
   otg_input_.current_position = joint_positions_;
   otg_input_.current_velocity = {0,0,0,0,0,0};
   otg_input_.current_acceleration = {0,0,0,0,0,0};
@@ -199,6 +208,7 @@ AuboPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previo
 hardware_interface::CallbackReturn
 AuboPositionHardwareInterface::on_cleanup(const rclcpp_lifecycle::State& previous_state)
 {
+  // cleanup aubo_driver (will call destructor AuboDriver::~AuboDriver()
   aubo_driver_.reset();
 
   RCLCPP_INFO(rclcpp::get_logger("AuboPositionHardwareInterface"), "System successfully stopped!");
@@ -220,36 +230,44 @@ hardware_interface::return_type AuboPositionHardwareInterface::read(const rclcpp
 hardware_interface::return_type AuboPositionHardwareInterface::write(const rclcpp::Time& time,
                                                                    const rclcpp::Duration& period)
 {
-
-
   // update ruckig otg input
   otg_input_.target_position = joint_position_command_;
   otg_input_.current_position = joint_positions_;
+  // update ruckig otg output
   auto result = otg_->update(otg_input_, otg_output_);
   if (result < 0)
   {
     RCLCPP_FATAL(rclcpp::get_logger("AuboPositionHardwareInterface"), "Ruckig OTG failed to update.");
   }
+  // pass the output to the input for the next update
   otg_output_.pass_to_input(otg_input_);
+
+  // set the joint position command to the new position (which should now respect joint limits)
   joint_position_command_ = otg_output_.new_position;
 
+  // capture the current time
   stopwatch_now_ = std::chrono::steady_clock::now();
+  // capture period since last servoj command
   double stopwatch_period = std::chrono::duration_cast<std::chrono::duration<double>>(stopwatch_now_ - stopwatch_last_).count();
 
-  
-  // HACK: set the delay before sending the next command to the robot
+  // calculate the delay before sending the next command to the robot
   // to avoid sending commands too fast
-  // delay is thresholded to be within 80% and 120% of the control period
+  // HACK: delay is thresholded to be within 80% and 120% of the control period
   double delay = servoj_total_delay_time_ - servoj_buffer_time_ - stopwatch_period;
   delay = std::min(delay, (servoj_time_ * 1.2) - stopwatch_period);
   delay = std::max(delay, (servoj_time_ * 0.8) - stopwatch_period);
   delay = std::max(delay, 0.0);
 
+  // sleep for the calculated delay
   usleep(delay * 1000000);
 
+  // call servoj to command the robot to joint position command
   servoj_total_delay_time_ = aubo_driver_->servoJ(joint_position_command_, false);
+
+  // capture last time of servoj command sent
   stopwatch_last_ = std::chrono::steady_clock::now();
 
+  // update previous joint position command
   prev_joint_position_command_ = joint_position_command_;
 
   // RCLCPP_INFO(rclcpp::get_logger("AuboPositionHardwareInterface"), "servoj time buffer (s): %f", servoj_total_delay_time_);

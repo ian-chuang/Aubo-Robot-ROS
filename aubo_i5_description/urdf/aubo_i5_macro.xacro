@@ -6,11 +6,14 @@
     parent
     *origin"
   >
+    <!-- parameters -->
     <xacro:property name="lower_limit" value="-3.04" />
     <xacro:property name="upper_limit" value="3.04" />
     <xacro:property name="max_velocity" value="3.1" />
     <xacro:property name="max_effort_1" value="300.0" />
     <xacro:property name="max_effort_2" value="50.0" />
+
+    <!-- Define all the Links -->
 
     <link name="${prefix}aubo_i5_base_link">
       <inertial>
@@ -167,6 +170,8 @@
     </link>
 
     <link name="${prefix}tool0_link"/>
+
+    <!-- Define all the Joints -->
 
     <joint name="${prefix}base_joint" type="fixed">
       <parent link="${parent}" />

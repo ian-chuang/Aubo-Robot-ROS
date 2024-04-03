@@ -70,14 +70,14 @@ def generate_launch_description():
         "mock_sensor_commands": mock_sensor_commands,
     }
     robot_description_path = os.path.join(
-        get_package_share_directory("aubo_i5_description"),"urdf","aubo_i5.urdf.xacro",
+        get_package_share_directory("aubo_i5_description"),"urdf","aubo_i5.urdf.xacro", # get urdf from aubo_i5_description package
     )
     moveit_config = (
         MoveItConfigsBuilder(
             "aubo_i5", package_name="aubo_i5_moveit_config"
         )
         .robot_description(
-            file_path=robot_description_path,
+            file_path=robot_description_path, # create robot description with launch arguments
             mappings=launch_arguments
         )
         .trajectory_execution(file_path="config/moveit_controllers.yaml")
@@ -90,6 +90,7 @@ def generate_launch_description():
         .to_moveit_configs()
     )
 
+    # define controllers config file
     robot_controllers = PathJoinSubstitution(
         [
             FindPackageShare("aubo_driver"),
@@ -97,10 +98,12 @@ def generate_launch_description():
             "aubo_i5_controllers.yaml",
         ]
     )
+    # define RViz config save
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare("aubo_i5_moveit_config"), "config", "moveit.rviz"]
     )
 
+    # controller manager (manages controllers)
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -108,12 +111,14 @@ def generate_launch_description():
         output="both",
         remappings=[('controller_manager/robot_description', 'robot_description')]
     )
+    # robot state publisher (publishes robot state / description / TF)
     robot_state_pub_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
         parameters=[moveit_config.robot_description],
     )
+    # RViz2 (visualize robot)
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
@@ -129,19 +134,21 @@ def generate_launch_description():
             moveit_config.joint_limits,
         ],
     )
-
+    
+    # joint state broadcaster controller spawner
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
     )
-
+    # joint trajectory controller spawner
     robot_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
         arguments=["joint_trajectory_controller", "--controller-manager", "/controller_manager"],
     )
-
+    
+    # Moveit move group node (launches MoveIt for planning and execution of trajectories)
     move_group_node = Node(
         package="moveit_ros_move_group",
         executable="move_group",

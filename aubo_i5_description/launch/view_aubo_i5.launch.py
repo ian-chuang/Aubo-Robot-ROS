@@ -37,7 +37,8 @@ def generate_launch_description():
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
     tf_prefix = LaunchConfiguration("tf_prefix")
-
+    
+    # generate robot description URDF from xacro with parameters tf_prefix
     robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
@@ -50,20 +51,24 @@ def generate_launch_description():
     )
     robot_description = {"robot_description": robot_description_content}
 
+    # RViz configuration file
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(description_package), "rviz", "view_robot.rviz"]
     )
 
+    # publish fake joint states with a GUI
     joint_state_publisher_node = Node(
         package="joint_state_publisher_gui",
         executable="joint_state_publisher_gui",
     )
+    # publish robot state
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
         parameters=[robot_description],
     )
+    # start rviz
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",

@@ -10,8 +10,7 @@
   <xacro:include filename="$(find aubo_i5_description)/urdf/aubo_i5_macro.xacro" />
   <xacro:include filename="$(find aubo_driver)/urdf/aubo.ros2_control.xacro" />
 
-  
-  
+  <!-- Aubo i5 URDF -->
   <xacro:aubo_i5
     prefix="$(arg prefix)"
     parent="world"
@@ -19,6 +18,7 @@
     <origin xyz="0 0 0" rpy="0 0 0" />
   </xacro:aubo_i5>
 
+  <!-- Aubo i5 ROS2 Control -->
   <xacro:aubo_ros2_control
     name="aubo_i5"
     prefix="$(arg prefix)"
@@ -27,5 +27,6 @@
     mock_sensor_commands="$(arg mock_sensor_commands)"
   />
 
+  <!-- world root link -->
   <link name="world" />
 </robot>
