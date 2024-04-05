@@ -17,10 +17,10 @@
           <plugin>aubo_driver/AuboPositionHardwareInterface</plugin>
           <!-- Parameters for the AuboPositionHardwareInterface -->
           <param name="robot_ip">${robot_ip}</param>
-          <param name="servoj_frequency">80</param>
+          <param name="servoj_frequency">100</param>
           <param name="servoj_smooth_scale">1.0</param>
           <param name="servoj_delay_scale">1.0</param>
-          <param name="servoj_buffer_time">0.001</param>
+          <param name="servoj_buffer_time">0.0</param>
           <param name="max_vel_limit">3.1</param>
           <param name="max_acc_limit">7.0</param>
           <param name="max_jerk_limit">50.0</param>

@@ -230,20 +230,7 @@ hardware_interface::return_type AuboPositionHardwareInterface::read(const rclcpp
 hardware_interface::return_type AuboPositionHardwareInterface::write(const rclcpp::Time& time,
                                                                    const rclcpp::Duration& period)
 {
-  // update ruckig otg input
-  otg_input_.target_position = joint_position_command_;
-  otg_input_.current_position = joint_positions_;
-  // update ruckig otg output
-  auto result = otg_->update(otg_input_, otg_output_);
-  if (result < 0)
-  {
-    RCLCPP_FATAL(rclcpp::get_logger("AuboPositionHardwareInterface"), "Ruckig OTG failed to update.");
-  }
-  // pass the output to the input for the next update
-  otg_output_.pass_to_input(otg_input_);
 
-  // set the joint position command to the new position (which should now respect joint limits)
-  joint_position_command_ = otg_output_.new_position;
 
   // capture the current time
   stopwatch_now_ = std::chrono::steady_clock::now();
@@ -260,6 +247,26 @@ hardware_interface::return_type AuboPositionHardwareInterface::write(const rclcp
 
   // sleep for the calculated delay
   usleep(delay * 1000000);
+
+
+
+
+  // update ruckig otg input
+  otg_input_.target_position = joint_position_command_;
+  otg_input_.current_position = joint_positions_;
+  // update ruckig otg output
+  auto result = otg_->update(otg_input_, otg_output_);
+  if (result < 0)
+  {
+    RCLCPP_FATAL(rclcpp::get_logger("AuboPositionHardwareInterface"), "Ruckig OTG failed to update.");
+  }
+  // pass the output to the input for the next update
+  otg_output_.pass_to_input(otg_input_);
+
+  // set the joint position command to the new position (which should now respect joint limits)
+  joint_position_command_ = otg_output_.new_position;
+
+  
 
   // call servoj to command the robot to joint position command
   servoj_total_delay_time_ = aubo_driver_->servoJ(joint_position_command_, false);
