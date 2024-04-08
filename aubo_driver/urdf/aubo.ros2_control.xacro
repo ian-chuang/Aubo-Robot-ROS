@@ -23,7 +23,7 @@
           <param name="servoj_buffer_time">0.0</param>
           <param name="max_vel_limit">3.1</param>
           <param name="max_acc_limit">7.0</param>
-          <param name="max_jerk_limit">50.0</param>
+          <param name="max_jerk_limit">30.0</param>
         </xacro:unless>
       </hardware>
 
