@@ -18,7 +18,7 @@
           <!-- Parameters for the AuboPositionHardwareInterface -->
           <param name="robot_ip">${robot_ip}</param>
           <param name="servoj_frequency">100</param>
-          <param name="servoj_smooth_scale">1.0</param>
+          <param name="servoj_smooth_scale">0.5</param>
           <param name="servoj_delay_scale">0.5</param>
           <param name="servoj_buffer_time">0.0</param>
           <param name="max_vel_limit">3.1</param>
@@ -49,7 +49,9 @@
           <param name="min">-3.04</param>
           <param name="max">3.04</param>
         </command_interface>
-        <state_interface name="position"/>
+        <state_interface name="position">
+          <param name="initial_value">-1.5707</param>
+        </state_interface>
         <state_interface name="velocity"/>
       </joint>
       <joint name="${prefix}wrist_1_joint">
@@ -65,7 +67,9 @@
           <param name="min">-3.04</param>
           <param name="max">3.04</param>
         </command_interface>
-        <state_interface name="position"/>
+        <state_interface name="position">
+          <param name="initial_value">-1.5707</param>
+        </state_interface>
         <state_interface name="velocity"/>
       </joint>
       <joint name="${prefix}wrist_3_joint">
