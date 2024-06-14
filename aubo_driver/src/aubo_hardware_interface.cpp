@@ -197,7 +197,8 @@ namespace aubo_driver
 
     // start the communication thread
     communication_thread_is_running_.store(true);
-    communication_thread_ = std::thread([this] { this->background_task(); });
+    communication_thread_ = std::thread([this]
+                                        { this->background_task(); });
 
     RCLCPP_INFO(rclcpp::get_logger("AuboPositionHardwareInterface"), "Successfully activated!");
 
@@ -236,23 +237,23 @@ namespace aubo_driver
   hardware_interface::return_type AuboPositionHardwareInterface::write(const rclcpp::Time &time,
                                                                        const rclcpp::Duration &period)
   {
-    joint_position_write_command_mutex_.lock();
-    joint_position_command_ = joint_position_write_command_;
-    joint_position_write_command_mutex_.unlock();
+    joint_write_command_mutex_.lock();
+    joint_position_write_command_ = joint_position_command_;
+    joint_write_command_mutex_.unlock();
     return hardware_interface::return_type::OK;
   }
 
   void AuboPositionHardwareInterface::background_task()
-  {    
+  {
     while (communication_thread_is_running_.load())
     {
       // start time
       auto start_time = std::chrono::steady_clock::now();
 
       // update ruckig otg input
-      joint_position_write_command_mutex_.lock();
+      joint_write_command_mutex_.lock();
       otg_input_.target_position = joint_position_write_command_;
-      joint_position_write_command_mutex_.unlock();
+      joint_write_command_mutex_.unlock();
 
       // update ruckig otg output
       auto result = otg_->update(otg_input_, otg_output_);
@@ -277,17 +278,19 @@ namespace aubo_driver
       // to avoid sending commands too fast
       // HACK: delay is thresholded to be within 80% and 120% of the control period
       auto period = std::chrono::duration_cast<std::chrono::duration<double>>(
-                        std::chrono::steady_clock::now() - start_time).count();
+                        std::chrono::steady_clock::now() - start_time)
+                        .count();
       double delay = servoj_total_delay_time_ - servoj_buffer_time_ - period;
       delay = std::min(delay, (servoj_time_ * 1.2) - period);
       delay = std::max(delay, (servoj_time_ * 0.8) - period);
       delay = std::max(delay, 0.0);
-      // sleep for the calculated delay
-      usleep(delay * 1000000);
+      // sleep for the calculated delay in seconds
+      std::this_thread::sleep_for(std::chrono::duration<double>(delay));
     }
 
   } // namespace aubo_driver
+}
 
 #include "pluginlib/class_list_macros.hpp"
 
-  PLUGINLIB_EXPORT_CLASS(aubo_driver::AuboPositionHardwareInterface, hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(aubo_driver::AuboPositionHardwareInterface, hardware_interface::SystemInterface)

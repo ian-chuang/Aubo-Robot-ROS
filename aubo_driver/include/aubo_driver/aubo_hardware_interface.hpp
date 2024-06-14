@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 #include <limits>
-#include <atomic>
+#include <mutex>
 
 // ros2_control hardware_interface
 #include "hardware_interface/hardware_info.hpp"
@@ -57,7 +57,7 @@ public:
 
 protected:
   // manage joint commands and states
-  std::vector<std::string> joint_position_command_;
+  std::array<double, 6UL> joint_position_command_;
   std::array<double, 6UL> joint_positions_;
   std::array<double, 6UL> joint_velocities_;
   std::array<double, 6UL> joint_efforts_;
