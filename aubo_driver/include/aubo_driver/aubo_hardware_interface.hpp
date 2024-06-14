@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <limits>
+#include <atomic>
 
 // ros2_control hardware_interface
 #include "hardware_interface/hardware_info.hpp"
@@ -56,11 +57,21 @@ public:
 
 protected:
   // manage joint commands and states
-  std::array<double, 6UL> joint_position_command_;
-  std::array<double, 6UL> prev_joint_position_command_;
+  std::vector<std::string> joint_position_command_;
   std::array<double, 6UL> joint_positions_;
   std::array<double, 6UL> joint_velocities_;
   std::array<double, 6UL> joint_efforts_;
+
+  // We use a thread to read/write to the driver so that we dont block the hardware_interface read/write.
+  std::thread communication_thread_;
+  std::atomic<bool> communication_thread_is_running_;
+  void background_task();
+  // read and write with mutex
+  std::array<double, 6UL> joint_position_write_command_;
+  std::array<double, 6UL> joint_position_read_state_;
+  std::array<double, 6UL> joint_velocity_read_state_;
+  std::mutex joint_write_command_mutex_;
+  std::mutex joint_read_state_mutex_;
 
   // Aubo Driver and parameters
   std::unique_ptr<AuboDriver> aubo_driver_;
@@ -72,13 +83,10 @@ protected:
   std::unique_ptr<ruckig::Ruckig<6>> otg_;
   ruckig::InputParameter<6> otg_input_;
   ruckig::OutputParameter<6> otg_output_;
+  std::mutex otg_mutex_;
   std::array<double, 6UL> max_vel_limit_;
   std::array<double, 6UL> max_acc_limit_;
   std::array<double, 6UL> max_jerk_limit_;
-
-  // stopwatch for timing
-  std::chrono::_V2::steady_clock::time_point stopwatch_last_;
-  std::chrono::_V2::steady_clock::time_point stopwatch_now_;
 
 };
 }  // namespace aubo_driver
