@@ -1,7 +1,16 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <xacro:macro name="aubo_ros2_control" params="name prefix robot_ip use_mock_hardware:=false mock_sensor_commands:=false">
+  <xacro:macro name="aubo_ros2_control" params="
+   name
+   prefix 
+   robot_ip 
+   use_mock_hardware:=false 
+   mock_sensor_commands:=false
+   max_vel_limit:=3.1
+   max_acc_limit:=6.0
+   max_jerk_limit:=20.0
+   ">
 
     <ros2_control name="${name}" type="system">
 
@@ -18,12 +27,12 @@
           <!-- Parameters for the AuboPositionHardwareInterface -->
           <param name="robot_ip">${robot_ip}</param>
           <param name="servoj_frequency">100</param>
-          <param name="servoj_smooth_scale">0.5</param>
-          <param name="servoj_delay_scale">0.5</param>
+          <param name="servoj_smooth_scale">1.0</param>
+          <param name="servoj_delay_scale">1.0</param>
           <param name="servoj_buffer_time">0.0</param>
-          <param name="max_vel_limit">3.1</param>
-          <param name="max_acc_limit">6.0</param>
-          <param name="max_jerk_limit">20.0</param>
+          <param name="max_vel_limit">${max_vel_limit}</param>
+          <param name="max_acc_limit">${max_acc_limit}</param>
+          <param name="max_jerk_limit">${max_jerk_limit}</param>
         </xacro:unless>
       </hardware>
 
